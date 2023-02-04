@@ -176,7 +176,11 @@ export default function Consolidations() {
         <div className="flex justify-between gap-4 mt-4">
           <Lessons onSelect={(lesson) => setLesson(lesson)} />
           <Person setSearchPerson={setSearchPerson} />
-          <DateRange />
+          <DateRange
+            onChange={(dateStart, dateEnd) =>
+              setDateRange({ dateStart, dateEnd })
+            }
+          />
           <div className="shrink-0">
             <button className="gap-2 flex justify-center items-center bg-[#6474dc] hover:bg-[#4c55dc] text-xs font-extrabold text-white px-7 rounded-lg hover:shadow-md h-full">
               <span className="text-lg">
@@ -597,7 +601,6 @@ function DateRange({ onChange }: DateRangeProps) {
           locale: {
             format: "MM-DD-YYYY",
           },
-          opens: "left",
           applyButtonClasses: "bg-[#6474dc] text-white rounded-lg",
         },
         (start: Moment, end: Moment, label?: string) => {
