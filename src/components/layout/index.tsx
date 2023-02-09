@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { AiOutlineFire, AiOutlineUsergroupAdd } from "react-icons/ai";
 import { RiHome5Line } from "react-icons/ri";
+import { BiNetworkChart } from "react-icons/bi";
 import { ReactNode } from "react";
 import Link from "next/link";
 
@@ -51,6 +52,20 @@ export default function Layout(props: {
                     <AiOutlineFire />
                   </span>
                   <div>Consolidation</div>
+                </li>
+              </Link>
+              <Link href="/taytay/network">
+                <li
+                  className={`flex items-center cursor-pointer hover:bg-[#e0e9f1] py-3 px-4 rounded-lg text-sm text-[#3c4151] ${
+                    activeRoute === "network"
+                      ? "font-extrabold bg-[#e0e9f1]"
+                      : ""
+                  }`}
+                >
+                  <span className="w-[35px] text-xl opacity-[.8]">
+                    <BiNetworkChart />
+                  </span>
+                  <div>Network</div>
                 </li>
               </Link>
             </div>
