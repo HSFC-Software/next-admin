@@ -1,7 +1,7 @@
 import Layout from "@/components/layout";
 import axios from "@/lib/axios";
 import Head from "next/head";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   RiCloseCircleFill,
   RiCheckFill,
@@ -13,8 +13,6 @@ import { AiOutlineEdit } from "react-icons/ai";
 import debounce from "lodash.debounce";
 import moment, { Moment } from "moment";
 import { IoCaretUpOutline, IoCaretDownOutline } from "react-icons/io5";
-import $ from "jquery";
-import "daterangepicker";
 import { Disciple } from "@/types/Disciples";
 import { Network } from "@/types/Network";
 import Link from "next/link";
@@ -31,13 +29,13 @@ export type Consolidators = {
 type Order = "asc" | "desc";
 
 export default function NetworkDetails() {
+  const params = useRouter();
+
   const [network, setNetwork] = useState<Network | null>(null);
   const [networks, setNetworks] = useState<Network[] | null>(null);
   const [editAlias, setEditAlias] = useState(false);
-  const [alias, setAlias] = useState("[X]'s Network");
-
-  const params = useRouter();
-  console.log(params);
+  const [alias, setAlias] = useState("");
+  const [isSavingAlias, setIsSavingAlias] = useState(false);
 
   // filters
   const [order, setOrder] = useState<Order>("desc");
@@ -143,6 +141,25 @@ export default function NetworkDetails() {
     }
   }, [params]);
 
+  const handleUpdateAlias = () => {
+    if (!alias) return;
+    setIsSavingAlias(true);
+    axios
+      .patch<Network>(`api/networks/${params.query.id}`, {
+        name: alias,
+      })
+      .then((res) => {
+        setNetwork(res.data);
+        setEditAlias(false);
+      })
+      .catch((err) => {
+        // todo: Handle not found data
+      })
+      .finally(() => {
+        setIsSavingAlias(false);
+      });
+  };
+
   return (
     <>
       <Head>
@@ -181,10 +198,15 @@ export default function NetworkDetails() {
             {editAlias && (
               <>
                 <span className="flex flex-col">
-                  <button className="text-xl text-gray-500 text-green-500 hover:bg-gray-100 rounded">
+                  <button
+                    disabled={isSavingAlias}
+                    onClick={handleUpdateAlias}
+                    className="text-xl text-gray-500 text-green-500 hover:bg-gray-100 rounded"
+                  >
                     <RiCheckFill />
                   </button>
                   <button
+                    disabled={isSavingAlias}
                     onClick={() => setEditAlias(false)}
                     className="text-xl text-gray-500 text-red-400 hover:bg-gray-100 rounded"
                   >
@@ -192,6 +214,7 @@ export default function NetworkDetails() {
                   </button>
                 </span>
                 <input
+                  disabled={isSavingAlias}
                   autoFocus
                   value={alias}
                   onChange={(e) => setAlias(e?.target?.value)}
@@ -526,214 +549,4 @@ function ColumnTitle(props: ColumnTitleProps) {
       )}
     </span>
   );
-}
-
-type PersonProps = {
-  setSearchPerson: (value: { key: string; value: string } | null) => any;
-};
-
-function Person(props: PersonProps) {
-  const ref = useRef(null);
-  const [isOpen, setIsOpen] = useState(false);
-  const [result, setResult] = useState<Disciple[] | null>(null);
-  const [selected, setSelected] = useState<Disciple | null>(null);
-  const [searchAs, setSearchAs] = useState<"disciple" | "consolidator">(
-    "disciple"
-  );
-
-  useOnClickOutside(ref, (event: any) => {
-    setIsOpen(false);
-  });
-
-  const onChange = debounce((e: any) => {
-    axios.get(`/api/networks/leaders?q=${e.target.value}`).then((res) => {
-      setResult(res.data);
-      if (!isOpen) setIsOpen(true);
-    });
-  }, 1000);
-
-  const handleOnApply = () => {
-    props.setSearchPerson({
-      key: searchAs,
-      value: selected?.id ?? "",
-    });
-    setSelected(null);
-    setIsOpen(false);
-  };
-
-  return (
-    <div ref={ref} className="grow relative">
-      <div className="relative">
-        <div
-          onClick={() => {
-            setIsOpen(!isOpen);
-            document.getElementById("person-input")?.focus();
-          }}
-          className="border-2 w-full rounded-lg relative py-[5px] px-4 cursor-pointer"
-        >
-          <label
-            style={{ marginTop: -10 }}
-            className="text-[9px] bg-white absolute top-0 left-2 px-2 text-gray-500 font-bold"
-          >
-            Search by Leader
-          </label>
-          <input
-            autoComplete="off"
-            id="person-input"
-            onChange={onChange}
-            placeholder="All"
-            className="text-xs font-bold w-full outline-0"
-          />
-        </div>
-        <div
-          style={{
-            marginTop: -7,
-            zIndex: 1,
-            display: isOpen ? "block" : "none",
-          }}
-          className="border-2 absolute w-full bg-white rounded-b-lg border-t-0"
-        >
-          <div className="border-t-2 mt-1" />
-          <div className="relative">
-            <div
-              className={`text-right px-3 mt-2 flex gap-1 justify-end ${
-                !!result?.length ? "absolute top-0 right-0" : ""
-              }`}
-            >
-              <button
-                onClick={() => {
-                  (document.getElementById("person-input") as any).value = "";
-                  setIsOpen(false);
-                  props.setSearchPerson(null);
-                }}
-                className="text-xs border-2 px-3 py-1 rounded-lg font-bold border-[#6474dc] text-[#6474dc] hover:bg-gray-50 bg-white"
-              >
-                Clear
-              </button>
-              <button
-                onClick={handleOnApply}
-                className="text-xs border-2 px-3 py-1 rounded-lg font-bold bg-[#6474dc] border-[#6474dc] text-white hover:bg-[#4c55dc] hover:border-[#4c55dc]"
-              >
-                Apply
-              </button>
-            </div>
-          </div>
-
-          <div className="max-h-[140px] overflow-auto">
-            <ul className="px-3 pb-3 font-bold text-sm py-2">
-              {result?.map((item) => (
-                <li
-                  onClick={() => {
-                    setSelected(item);
-                    setResult(null);
-                    (document.getElementById("person-input") as any).value = `${
-                      item.first_name ?? ""
-                    } ${item?.last_name ?? ""}`;
-                  }}
-                  key={item.id}
-                  className="block px-4 py-2 rounded-lg hover:bg-[#f4f7fa] cursor-pointer"
-                >
-                  {item.first_name ?? ""} {item?.last_name ?? ""}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-type DateRangeProps = {
-  startDate?: string;
-  endDate?: string;
-  onChange?: (start?: Moment, end?: Moment) => any;
-};
-
-function DateRange({ onChange }: DateRangeProps) {
-  const ref = useRef(null);
-  const [isOpen, setIsOpen] = useState(false);
-  const [calendarInitialized, setCalendarInitialized] = useState(false);
-
-  useOnClickOutside(ref, (event: any) => {
-    setIsOpen(false);
-  });
-
-  const handleClick = () => {
-    if (!calendarInitialized) {
-      ($?.("#daterange-input") as any)?.daterangepicker?.(
-        {
-          locale: {
-            format: "MM-DD-YYYY",
-            cancelLabel: "Clear",
-          },
-          applyButtonClasses: "bg-[#6474dc] text-white rounded-lg",
-        },
-        (start: Moment, end: Moment, label?: string) => {
-          onChange?.(start, end);
-        }
-      );
-
-      setCalendarInitialized(true);
-    }
-
-    setIsOpen(!isOpen);
-    document.getElementById("daterange-input")?.focus?.();
-  };
-
-  // on click cancel remove value
-  useEffect(() => {
-    if (isOpen) {
-      $(".cancelBtn").off("click");
-      $(".cancelBtn").on("click", () => {
-        onChange?.();
-
-        setTimeout(() => {
-          (document.getElementById("daterange-input") as any).value = "";
-        }, 250);
-      });
-    }
-  }, [isOpen, onChange]);
-
-  return (
-    <div ref={ref} className="grow relative">
-      <div className="relative">
-        <div
-          onClick={handleClick}
-          className="border-2 w-full rounded-lg relative py-[5px] pl-4 cursor-pointer"
-        >
-          <label
-            style={{ marginTop: -10 }}
-            className="text-[9px] bg-white absolute top-0 left-2 px-2 text-gray-500 font-bold "
-          >
-            Date Opened
-          </label>
-          <input
-            autoComplete="off"
-            id="daterange-input"
-            placeholder="All"
-            className="text-xs font-bold w-full outline-0"
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function useOnClickOutside(ref: any, handler: (event: any) => any) {
-  useEffect(() => {
-    const listener = (event: any) => {
-      // Do nothing if clicking ref's element or descendent elements
-      if (!ref.current || ref.current.contains(event.target)) {
-        return;
-      }
-      handler(event);
-    };
-    document.addEventListener("mousedown", listener);
-    document.addEventListener("touchstart", listener);
-    return () => {
-      document.removeEventListener("mousedown", listener);
-      document.removeEventListener("touchstart", listener);
-    };
-  }, [ref, handler]);
 }
