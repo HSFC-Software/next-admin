@@ -33,8 +33,6 @@ export default function NetworkConsolidator() {
     useState<Consolidators | null>(null);
   const [isAssigning, setIsAssigning] = useState(false);
 
-  console.log(selectedConsolidator);
-
   useEffect(() => {
     axios.get("/api/vips").then((res) => {
       setVips(res.data);
