@@ -12,6 +12,7 @@ import $ from "jquery";
 import "daterangepicker";
 import { Disciple } from "@/types/Disciples";
 import { Network } from "@/types/Network";
+import Link from "next/link";
 
 export type Consolidators = {
   id: string;
@@ -86,23 +87,10 @@ export default function Networks() {
   };
 
   const onChange = debounce((e: any) => {
-    axios.get(`/api/networks/leaders?q=${e.target.value}`).then((res) => {
+    axios.get(`/api/disciples?q=${e.target.value}`).then((res) => {
       setDisciplesSearch(res.data);
     });
   }, 1000);
-
-  const handleAddConsolidator = () => {
-    setIsAddingDisciple(true);
-    axios
-      .post("/api/consolidators", { disciples_id: selectedDisciple?.id })
-      .finally(() => {
-        setIsAddingDisciple(false);
-        axios.get("/api/consolidators").then((res) => {
-          setConsolidators(res.data);
-        });
-        setShowAddModal(false);
-      });
-  };
 
   const handleClearFilter = () => {
     setSearchLeader(null);
@@ -111,6 +99,23 @@ export default function Networks() {
     (document.getElementById("person-input") as any).value = "";
     (document.getElementById("daterange-input") as any).value = "";
     (document.getElementById("search-input") as any).value = "";
+  };
+
+  const handleAddNetwork = (name?: string) => {
+    setIsAddingDisciple(true);
+    axios
+      .post("/api/networks", {
+        discipler_id: selectedDisciple?.id,
+        name: name ?? `${selectedDisciple?.first_name}'s Network`,
+      })
+      .finally(() => {
+        setIsAddingDisciple(false);
+        axios.get("/api/networks").then((res) => {
+          setConsolidators(res.data);
+        });
+        handleClearFilter();
+        setShowAddModal(false);
+      });
   };
 
   const handleFuzzySearch = debounce((e: any) => {
@@ -172,7 +177,13 @@ export default function Networks() {
             }}
           />
           <div className="shrink-0">
-            <button className="gap-2 flex justify-center items-center bg-[#6474dc] hover:bg-[#4c55dc] text-xs font-extrabold text-white px-7 rounded-lg hover:shadow-md h-full">
+            <button
+              onClick={() => {
+                setShowAddModal(true);
+                setSelectedDisciple(null);
+              }}
+              className="gap-2 flex justify-center items-center bg-[#6474dc] hover:bg-[#4c55dc] text-xs font-extrabold text-white px-7 rounded-lg hover:shadow-md h-full"
+            >
               <span className="text-lg">
                 <BiNetworkChart />
               </span>
@@ -243,12 +254,17 @@ export default function Networks() {
                 const isLast = networks.length - 1 === index;
                 return (
                   <tr
+                    onClick={() => {
+                      document.getElementById(item.id)?.click();
+                    }}
                     key={item.id}
-                    className={`hover:border-[transparent] hover:bg-[#f4f7fa] ${
+                    className={`hover:border-[transparent] hover:bg-[#f4f7fa] cursor-pointer ${
                       isLast ? "" : "border-b"
                     }`}
                   >
-                    <td className="py-2 rounded-l-lg"></td>
+                    <td className="py-2 rounded-l-lg">
+                      <Link id={item.id} href={`/taytay/network/${item.id}`} />
+                    </td>
                     <td className="py-2">{item.name}</td>
                     <td className="py-2">
                       {item?.discipler_id?.first_name ?? ""}{" "}
@@ -274,18 +290,18 @@ export default function Networks() {
                 </button>
               </div>
               <header className="text-center font-bold text-2xl text-[#3c4151]">
-                Add Consolidator
+                New Network
               </header>
               <div className="mt-4">
                 <input
                   onKeyPress={onKeyPress}
                   onChange={onChange}
                   id="input-search-conso"
-                  placeholder="Search"
+                  placeholder="Search Leader"
                   className="w-full px-4 py-2 border-2 rounded-2xl mt-2"
                 />
               </div>
-              {consolidators && (
+              {!!disciplesSearch?.length && (
                 <div className="max-h-[150px] overflow-y-auto flex flex-col py-2">
                   {disciplesSearch?.map((item) => {
                     return (
@@ -310,14 +326,25 @@ export default function Networks() {
                   })}
                 </div>
               )}
+              <textarea
+                id="network-alias"
+                rows={3}
+                placeholder="Network Alias"
+                className="w-full px-4 py-2 border-2 rounded-2xl mt-2"
+              ></textarea>
               <div className="mt-5">
                 <div className="flex gap-2">
                   <button
-                    onClick={handleAddConsolidator}
+                    onClick={() => {
+                      handleAddNetwork(
+                        (document.getElementById("network-alias") as any)
+                          ?.value ?? null
+                      );
+                    }}
                     disabled={!selectedDisciple || isAddingDisciple}
                     className="grow gap-2 flex justify-center disabled:bg-[#e0e9f1] bg-[#6474dc] hover:bg-[#4c55dc] text-xs font-extrabold text-white py-3 px-4 rounded-lg hover:shadow-md"
                   >
-                    Add as Consolidator
+                    Add Network
                   </button>
                 </div>
               </div>
