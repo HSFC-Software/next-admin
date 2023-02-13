@@ -18,6 +18,7 @@ import "daterangepicker";
 import { Disciple } from "@/types/Disciples";
 import { Network } from "@/types/Network";
 import Link from "next/link";
+import { useRouter } from "next/router";
 
 export type Consolidators = {
   id: string;
@@ -29,10 +30,14 @@ export type Consolidators = {
 
 type Order = "asc" | "desc";
 
-export default function Networks() {
+export default function NetworkDetails() {
+  const [network, setNetwork] = useState<Network | null>(null);
   const [networks, setNetworks] = useState<Network[] | null>(null);
   const [editAlias, setEditAlias] = useState(false);
   const [alias, setAlias] = useState("[X]'s Network");
+
+  const params = useRouter();
+  console.log(params);
 
   // filters
   const [order, setOrder] = useState<Order>("desc");
@@ -68,8 +73,6 @@ export default function Networks() {
     );
 
     let q = searchParams.toString();
-
-    console.log(q, queryObject);
 
     axios.get(`/api/networks?${q}`).then((res) => {
       setNetworks(res.data);
@@ -125,9 +128,20 @@ export default function Networks() {
       });
   };
 
-  const handleFuzzySearch = debounce((e: any) => {
-    setFuzzySearchKeyword(e?.target?.value ?? "");
-  }, 300);
+  useEffect(() => {
+    const id = params.query.id;
+    if (id) {
+      axios
+        .get<Network>(`/api/networks/${id}`)
+        .then((res) => {
+          setNetwork(res.data);
+          setAlias(res.data.name);
+        })
+        .catch((err) => {
+          // todo: Handle not found data
+        });
+    }
+  }, [params]);
 
   return (
     <>
@@ -155,12 +169,13 @@ export default function Networks() {
                 <button
                   onClick={() => {
                     setEditAlias(true);
+                    setAlias(network?.name ?? "");
                   }}
                   className="text-xl text-gray-500 mt-2"
                 >
                   <AiOutlineEdit />
                 </button>
-                <h1 className="text-4xl font-bold">[X]&apos;s Network</h1>
+                <h1 className="text-4xl font-bold">{network?.name}</h1>
               </>
             )}
             {editAlias && (
