@@ -36,6 +36,7 @@ export default function NetworkDetails() {
   const [editAlias, setEditAlias] = useState(false);
   const [alias, setAlias] = useState("");
   const [isSavingAlias, setIsSavingAlias] = useState(false);
+  const [showRelativeTime, setShowRelativeTime] = useState(true);
 
   // filters
   const [order, setOrder] = useState<Order>("desc");
@@ -225,7 +226,24 @@ export default function NetworkDetails() {
             )}
           </div>
           <div className="text-sm text-gray-400">
-            Leader: Joseph - Opened last February 10, 2023
+            Leader: {network?.discipler_id?.first_name ?? ""}{" "}
+            {network?.discipler_id?.last_name ?? ""} - Opened last{" "}
+            {showRelativeTime && (
+              <span
+                className="cursor-pointer underline"
+                onClick={() => setShowRelativeTime(false)}
+              >
+                {moment(network?.created_at).fromNow()}
+              </span>
+            )}
+            {!showRelativeTime && (
+              <span
+                className="cursor-pointer underline"
+                onClick={() => setShowRelativeTime(true)}
+              >
+                {moment(network?.created_at).format("LL")}
+              </span>
+            )}
           </div>
         </div>
         <div className="flex gap-2 items-center justify-between">
