@@ -11,7 +11,7 @@ import {
 import { BiNetworkChart } from "react-icons/bi";
 import { AiOutlineEdit } from "react-icons/ai";
 import debounce from "lodash.debounce";
-import moment, { Moment } from "moment";
+import moment from "moment";
 import { IoCaretUpOutline, IoCaretDownOutline } from "react-icons/io5";
 import { Disciple } from "@/types/Disciples";
 import { Network } from "@/types/Network";
@@ -28,10 +28,35 @@ export type Consolidators = {
 
 type Order = "asc" | "desc";
 
+type SubNetwork = {
+  id: string;
+  networks_id: {
+    id: string;
+    name: string;
+    created_at: string;
+    discipler_id: {
+      first_name: string;
+      last_name?: string;
+    };
+  };
+};
+
+type Members = {
+  id: string;
+  disciple_id: {
+    id: string;
+    first_name: string;
+    last_name?: string;
+  };
+  created_at: string;
+};
+
 export default function NetworkDetails() {
   const params = useRouter();
 
   const [network, setNetwork] = useState<Network | null>(null);
+  const [subNetworks, setSubNetworks] = useState<SubNetwork[] | null>(null);
+  const [members, setMembers] = useState<Members[] | null>(null);
   const [networks, setNetworks] = useState<Network[] | null>(null);
   const [editAlias, setEditAlias] = useState(false);
   const [alias, setAlias] = useState("");
@@ -45,10 +70,6 @@ export default function NetworkDetails() {
     key: string;
     value: string;
   } | null>(null);
-  const [dateRange, setDateRange] = useState<{
-    dateStart: Moment;
-    dateEnd: Moment;
-  } | null>();
   const [fuzzySearchKeyword, setFuzzySearchKeyword] = useState("");
 
   useEffect(() => {
@@ -61,11 +82,6 @@ export default function NetworkDetails() {
       queryObject.discipler_id = searchLeader?.value;
     }
 
-    if (dateRange) {
-      queryObject.dateStart = dateRange.dateStart.utc().toISOString();
-      queryObject.dateEnd = dateRange.dateEnd.utc().toISOString();
-    }
-
     const searchParams = new URLSearchParams();
     Object.keys(queryObject).forEach((key) =>
       searchParams.append(key, queryObject[key])
@@ -76,7 +92,7 @@ export default function NetworkDetails() {
     axios.get(`/api/networks?${q}`).then((res) => {
       setNetworks(res.data);
     });
-  }, [searchLeader, dateRange, sortBy, order]);
+  }, [searchLeader, sortBy, order]);
 
   const [consolidators, setConsolidators] = useState<Consolidators[] | null>(
     null
@@ -88,7 +104,8 @@ export default function NetworkDetails() {
     null
   );
 
-  const [showAddModal, setShowAddModal] = useState(false);
+  const [showAddNetworkModal, setShowAddModal] = useState(false);
+  const [showAddDiscipleModal, setShowAddDiscipleModal] = useState(false);
   const [isAddingDisciple, setIsAddingDisciple] = useState(false);
 
   const onKeyPress = () => {
@@ -103,25 +120,70 @@ export default function NetworkDetails() {
 
   const handleClearFilter = () => {
     setSearchLeader(null);
-    setDateRange(null);
     setFuzzySearchKeyword("");
-    (document.getElementById("person-input") as any).value = "";
-    (document.getElementById("daterange-input") as any).value = "";
-    (document.getElementById("search-input") as any).value = "";
+  };
+
+  function init() {
+    axios
+      .get<Network>(`/api/networks/${params.query.id}`)
+      .then((res) => {
+        console.log(res.data);
+        setNetwork(res.data);
+        setAlias(res.data.name);
+      })
+      .catch((err) => {
+        // todo: Handle not found data
+      });
+
+    axios
+      .get<SubNetwork[]>(`/api/networks/networks/${params.query.id}`)
+      .then((res) => {
+        setSubNetworks(res.data);
+      })
+      .catch((err) => {
+        // todo: Handle not found data
+      });
+
+    axios
+      .get<Members[]>(`/api/networks/disciples/${params.query.id}`)
+      .then((res) => {
+        setMembers(res.data);
+      })
+      .catch((err) => {
+        // todo: Handle not found data
+      });
+  }
+
+  const handleAddDisciple = () => {
+    setIsAddingDisciple(true);
+    axios
+      .post("/api/networks/disciples/link", {
+        network_id: params.query.id,
+        disciple_id: selectedDisciple?.id,
+      })
+      .then(init)
+      .catch((error) => {
+        // TODO: handle error gracefully
+        // console.log(error)
+      })
+      .finally(() => {
+        setIsAddingDisciple(false);
+        handleClearFilter();
+        setShowAddDiscipleModal(false);
+      });
   };
 
   const handleAddNetwork = (name?: string) => {
     setIsAddingDisciple(true);
     axios
-      .post("/api/networks", {
+      .post("/api/networks/networks/new", {
         discipler_id: selectedDisciple?.id,
-        name: name ?? `${selectedDisciple?.first_name}'s Network`,
+        name: name || `${selectedDisciple?.first_name}'s Network`,
+        network_id: params.query.id,
       })
+      .then(init)
       .finally(() => {
         setIsAddingDisciple(false);
-        axios.get("/api/networks").then((res) => {
-          setConsolidators(res.data);
-        });
         handleClearFilter();
         setShowAddModal(false);
       });
@@ -130,15 +192,7 @@ export default function NetworkDetails() {
   useEffect(() => {
     const id = params.query.id;
     if (id) {
-      axios
-        .get<Network>(`/api/networks/${id}`)
-        .then((res) => {
-          setNetwork(res.data);
-          setAlias(res.data.name);
-        })
-        .catch((err) => {
-          // todo: Handle not found data
-        });
+      init();
     }
   }, [params]);
 
@@ -168,16 +222,6 @@ export default function NetworkDetails() {
         <meta name="description" content="Networks" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
-        <script
-          async
-          type="text/javascript"
-          src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"
-        ></script>
-        <link
-          rel="stylesheet"
-          type="text/css"
-          href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css"
-        />
       </Head>
       <Layout activeRoute="network">
         <div className="flex flex-col gap-4 mb-7">
@@ -215,6 +259,7 @@ export default function NetworkDetails() {
                   </button>
                 </span>
                 <input
+                  key={network?.id}
                   disabled={isSavingAlias}
                   autoFocus
                   value={alias}
@@ -248,7 +293,10 @@ export default function NetworkDetails() {
         </div>
         <div className="flex gap-2 items-center justify-between">
           <header className="text-xl font-bold">Members</header>
-          <button className="flex gap-2 items-center bg-[#6474dc] hover:bg-[#4c55dc] text-sm px-4 rounded text-white py-2 font-bold">
+          <button
+            onClick={() => setShowAddDiscipleModal(true)}
+            className="flex gap-2 items-center bg-[#6474dc] hover:bg-[#4c55dc] text-sm px-4 rounded text-white py-2 font-bold"
+          >
             <RiUserAddLine />
             Add member
           </button>
@@ -260,61 +308,26 @@ export default function NetworkDetails() {
                 <td className="py-2 pl-2 rounded-l-lg">
                   {/* <div className="border-2 rounded-md w-[21px] h-[21px] bg-white cursor-pointer" /> */}
                 </td>
-                <td className="py-2 font-bold text-[#6d8297]">
-                  <ColumnTitle
-                    isActive={sortBy === "name"}
-                    order={order}
-                    name="name"
-                    onClick={() => {
-                      if (sortBy === "name") {
-                        if (order === "asc") setOrder("desc");
-                        else setOrder("asc");
-                      } else {
-                        setSortBy("name");
-                      }
-                    }}
-                  >
-                    (Alias)
-                  </ColumnTitle>
-                </td>
+                <td className="py-2 font-bold text-[#6d8297]">Name</td>
                 <td className="py-2 font-bold text-[#6d8297]">
                   <ColumnTitle order={order} name="">
-                    Leader
-                  </ColumnTitle>
-                </td>
-                <td className="py-2 font-bold text-[#6d8297]">
-                  <ColumnTitle order={order} name="">
-                    Member Count
+                    Surname
                   </ColumnTitle>
                 </td>
                 <td className="py-2 font-bold text-[#6d8297] rounded-r-lg">
-                  <ColumnTitle
-                    isActive={sortBy === "created_at"}
-                    order={order}
-                    name="created_at"
-                    onClick={() => {
-                      if (sortBy === "created_at") {
-                        if (order === "asc") setOrder("desc");
-                        else setOrder("asc");
-                      } else {
-                        setSortBy("created_at");
-                      }
-                    }}
-                  >
-                    Date Opened
-                  </ColumnTitle>
+                  Date Joined
                 </td>
               </tr>
             </thead>
             <tbody>
-              {networks
+              {members
                 ?.filter((item) =>
                   JSON.stringify(item)
                     ?.toLowerCase()
                     ?.includes(fuzzySearchKeyword.toLowerCase?.())
                 )
                 ?.map((item, index) => {
-                  const isLast = networks.length - 1 === index;
+                  const isLast = members.length - 1 === index;
                   return (
                     <tr
                       onClick={() => {
@@ -331,12 +344,12 @@ export default function NetworkDetails() {
                           href={`/taytay/network/${item.id}`}
                         />
                       </td>
-                      <td className="py-2">{item.name}</td>
                       <td className="py-2">
-                        {item?.discipler_id?.first_name ?? ""}{" "}
-                        {item?.discipler_id?.last_name ?? ""}
+                        {item?.disciple_id?.first_name ?? ""}
                       </td>
-                      <td className="py-2">{item.member_count}</td>
+                      <td className="py-2">
+                        {item?.disciple_id?.last_name ?? ""}
+                      </td>
                       <td className="py-2 rounded-r-lg">
                         {moment(item.created_at).format("LL")}
                       </td>
@@ -348,7 +361,12 @@ export default function NetworkDetails() {
         </div>
         <div className="flex gap-2 items-center justify-between mt-10">
           <header className="text-xl font-bold">Networks</header>
-          <button className="flex gap-2 items-center bg-[#6474dc] hover:bg-[#4c55dc] text-sm px-4 rounded text-white py-2 font-bold">
+          <button
+            onClick={() => {
+              setShowAddModal(true);
+            }}
+            className="flex gap-2 items-center bg-[#6474dc] hover:bg-[#4c55dc] text-sm px-4 rounded text-white py-2 font-bold"
+          >
             <BiNetworkChart />
             Add Network
           </button>
@@ -360,85 +378,47 @@ export default function NetworkDetails() {
                 <td className="py-2 pl-2 rounded-l-lg">
                   {/* <div className="border-2 rounded-md w-[21px] h-[21px] bg-white cursor-pointer" /> */}
                 </td>
-                <td className="py-2 font-bold text-[#6d8297]">
-                  <ColumnTitle
-                    isActive={sortBy === "name"}
-                    order={order}
-                    name="name"
-                    onClick={() => {
-                      if (sortBy === "name") {
-                        if (order === "asc") setOrder("desc");
-                        else setOrder("asc");
-                      } else {
-                        setSortBy("name");
-                      }
-                    }}
-                  >
-                    (Alias)
-                  </ColumnTitle>
-                </td>
-                <td className="py-2 font-bold text-[#6d8297]">
-                  <ColumnTitle order={order} name="">
-                    Leader
-                  </ColumnTitle>
-                </td>
-                <td className="py-2 font-bold text-[#6d8297]">
-                  <ColumnTitle order={order} name="">
-                    Member Count
-                  </ColumnTitle>
-                </td>
+                <td className="py-2 font-bold text-[#6d8297]">(Alias)</td>
+                <td className="py-2 font-bold text-[#6d8297]">Leader</td>
+
                 <td className="py-2 font-bold text-[#6d8297] rounded-r-lg">
-                  <ColumnTitle
-                    isActive={sortBy === "created_at"}
-                    order={order}
-                    name="created_at"
-                    onClick={() => {
-                      if (sortBy === "created_at") {
-                        if (order === "asc") setOrder("desc");
-                        else setOrder("asc");
-                      } else {
-                        setSortBy("created_at");
-                      }
-                    }}
-                  >
-                    Date Opened
-                  </ColumnTitle>
+                  Date Opened
                 </td>
               </tr>
             </thead>
             <tbody>
-              {networks
+              {subNetworks
                 ?.filter((item) =>
                   JSON.stringify(item)
                     ?.toLowerCase()
                     ?.includes(fuzzySearchKeyword.toLowerCase?.())
                 )
                 ?.map((item, index) => {
-                  const isLast = networks.length - 1 === index;
+                  const isLast = subNetworks.length - 1 === index;
                   return (
                     <tr
                       onClick={() => {
-                        document.getElementById(item.id)?.click();
+                        document.getElementById(item.networks_id.id)?.click();
                       }}
-                      key={item.id}
+                      key={item.networks_id.id}
                       className={`hover:border-[transparent] hover:bg-[#f4f7fa] cursor-pointer ${
                         isLast ? "" : "border-b"
                       }`}
                     >
                       <td className="py-2 rounded-l-lg">
                         <Link
-                          id={item.id}
-                          href={`/taytay/network/${item.id}`}
+                          id={item.networks_id.id}
+                          href={`/taytay/network/${item.networks_id.id}`}
                         />
                       </td>
-                      <td className="py-2">{item.name}</td>
+                      <td className="py-2">{item.networks_id.name}</td>
                       <td className="py-2">
-                        {item?.discipler_id?.first_name ?? ""}{" "}
-                        {item?.discipler_id?.last_name ?? ""}
+                        {item.networks_id.discipler_id?.first_name ?? ""}{" "}
+                        {item.networks_id.discipler_id?.last_name ?? ""}
                       </td>
-                      <td className="py-2">{item.member_count}</td>
+                      {/* <td className="py-2">{item.member_count}</td> */}
                       <td className="py-2 rounded-r-lg">
-                        {moment(item.created_at).format("LL")}
+                        {moment(item.networks_id.created_at).format("LL")}
                       </td>
                     </tr>
                   );
@@ -447,7 +427,7 @@ export default function NetworkDetails() {
           </table>
         </div>
       </Layout>
-      {showAddModal && (
+      {showAddNetworkModal && (
         <div className="fixed top-0 w-screen h-screen bg-[#3c4151b3] z-10">
           <div className="flex w-full h-full justify-center items-center">
             <div className="bg-white rounded-2xl w-[560px] relative p-7">
@@ -512,6 +492,67 @@ export default function NetworkDetails() {
                     className="grow gap-2 flex justify-center disabled:bg-[#e0e9f1] bg-[#6474dc] hover:bg-[#4c55dc] text-xs font-extrabold text-white py-3 px-4 rounded-lg hover:shadow-md"
                   >
                     Add Network
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {showAddDiscipleModal && (
+        <div className="fixed top-0 w-screen h-screen bg-[#3c4151b3] z-10">
+          <div className="flex w-full h-full justify-center items-center">
+            <div className="bg-white rounded-2xl w-[560px] relative p-7">
+              <div className="absolute top-0 right-0 p-4 text-2xl text-gray-600">
+                <button onClick={() => setShowAddDiscipleModal(false)}>
+                  <RiCloseCircleFill />
+                </button>
+              </div>
+              <header className="text-center font-bold text-2xl text-[#3c4151]">
+                Add Member
+              </header>
+              <div className="mt-4">
+                <input
+                  onKeyPress={onKeyPress}
+                  onChange={onChange}
+                  id="input-search-disciple"
+                  placeholder="Search Member"
+                  className="w-full px-4 py-2 border-2 rounded-2xl mt-2"
+                />
+              </div>
+              {!!disciplesSearch?.length && (
+                <div className="max-h-[150px] overflow-y-auto flex flex-col py-2">
+                  {disciplesSearch?.map((item) => {
+                    return (
+                      <li
+                        key={item.id}
+                        onClick={() => {
+                          setSelectedDisciple(item);
+                          setDisciplesSearch(null);
+                          (
+                            document.getElementById(
+                              "input-search-disciple"
+                            ) as HTMLInputElement
+                          ).value = `${item.first_name ?? ""} ${
+                            item?.last_name ?? ""
+                          }`;
+                        }}
+                        className="block py-2 hover:bg-[#f4f7fa] px-4 rounded-lg cursor-pointer"
+                      >
+                        {item.first_name} {item.last_name}
+                      </li>
+                    );
+                  })}
+                </div>
+              )}
+              <div className="mt-5">
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleAddDisciple}
+                    disabled={!selectedDisciple || isAddingDisciple}
+                    className="grow gap-2 flex justify-center disabled:bg-[#e0e9f1] bg-[#6474dc] hover:bg-[#4c55dc] text-xs font-extrabold text-white py-3 px-4 rounded-lg hover:shadow-md"
+                  >
+                    Add Member
                   </button>
                 </div>
               </div>

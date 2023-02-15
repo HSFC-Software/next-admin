@@ -106,7 +106,7 @@ export default function Networks() {
     axios
       .post("/api/networks", {
         discipler_id: selectedDisciple?.id,
-        name: name ?? `${selectedDisciple?.first_name}'s Network`,
+        name: name || `${selectedDisciple?.first_name}'s Network`,
       })
       .finally(() => {
         setIsAddingDisciple(false);
