@@ -1,7 +1,7 @@
 import api from "axios";
 
 const axios = api.create({
-  baseURL: "http://localhost:3000",
+  baseURL: "https://api.fishgen.org",
   timeout: 10000,
 });
 
