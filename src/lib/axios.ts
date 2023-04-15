@@ -16,4 +16,21 @@ axios.interceptors.request.use(
   }
 );
 
+const edgeFunction = api.create({
+  baseURL: process.env.NEXT_EDGE_FUNCTION_URL,
+  timeout: 10000,
+});
+
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("access_token");
+    config.headers.Authorization = `Bearer ${token}`;
+    return config;
+  },
+  (error) => {
+    // TODO: handle errors
+  }
+);
+
 export default axios;
+export { edgeFunction };

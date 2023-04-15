@@ -6,6 +6,8 @@ import moment from "moment";
 import { AiOutlineUsergroupAdd } from "react-icons/ai";
 import debounce from "lodash.debounce";
 import { Consolidators } from "./network";
+import { useNewVip } from "@/lib/mutation";
+import { RiAddCircleFill } from "react-icons/ri";
 
 type VIP = {
   id: string;
@@ -32,6 +34,7 @@ export default function NetworkConsolidator() {
   const [selectedConsolidator, setSelectedConsolidator] =
     useState<Consolidators | null>(null);
   const [isAssigning, setIsAssigning] = useState(false);
+  const [showCreateVipModal, setShowCreateVipModal] = useState(false);
 
   useEffect(() => {
     axios.get("/api/vips").then((res) => {
@@ -78,7 +81,12 @@ export default function NetworkConsolidator() {
       </Head>
       <Layout activeRoute="conso">
         <div className="flex flex-col gap-4">
-          <h1 className="text-4xl font-bold">VIPs</h1>
+          <h1 className="text-4xl font-bold flex items-center gap-3">
+            VIPs
+            <button onClick={() => setShowCreateVipModal(true)}>
+              <RiAddCircleFill size={24} color="#6474dc" />
+            </button>
+          </h1>
         </div>
         <table className="table-auto w-full mt-7 text-sm">
           <thead>
@@ -197,6 +205,73 @@ export default function NetworkConsolidator() {
           </div>
         </div>
       )}
+      <CreateVip
+        isVisible={showCreateVipModal}
+        onCancel={() => setShowCreateVipModal(false)}
+      />
     </>
+  );
+}
+
+function CreateVip(props: { isVisible: boolean; onCancel: () => void }) {
+  const [first_name, setFirst_name] = useState("");
+  const [last_name, setLast_name] = useState("");
+  const [contact_number, setContact_number] = useState("");
+
+  const { mutate: handleNewVip } = useNewVip();
+
+  const handleSubmit = () => {
+    handleNewVip(
+      { first_name, last_name, contact_number },
+      { onSettled: props.onCancel }
+    );
+  };
+
+  if (!props.isVisible) return null;
+
+  return (
+    <div className="fixed top-0 w-screen h-screen bg-[#3c4151b3] z-10">
+      <div className="flex w-full h-full justify-center items-center">
+        <div className="bg-white rounded-2xl w-[560px] relative p-7">
+          <header className="text-center font-bold text-2xl text-[#3c4151]">
+            New VIP
+          </header>
+          <div className="mt-4">
+            <input
+              autoFocus
+              value={first_name}
+              onChange={(e) => setFirst_name(e.target.value)}
+              placeholder="First Name"
+              className="w-full px-4 py-2 border-2 rounded-2xl mt-2"
+            />
+            <input
+              value={last_name}
+              onChange={(e) => setLast_name(e.target.value)}
+              placeholder="Last Name"
+              className="w-full px-4 py-2 border-2 rounded-2xl mt-2"
+            />
+            <input
+              value={contact_number}
+              onChange={(e) => setContact_number(e.target.value)}
+              placeholder="Contact Number"
+              className="w-full px-4 py-2 border-2 rounded-2xl mt-2"
+            />
+          </div>
+
+          <button
+            onClick={props.onCancel}
+            className="text-[#6474dc] mt-4 w-full flex justify-center text-xs font-extrabold text-white py-3 px-4 rounded-lg"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit}
+            className="mt-4 w-full flex justify-center disabled:bg-[#e0e9f1] bg-[#6474dc] hover:bg-[#4c55dc] text-xs font-extrabold text-white py-3 px-4 rounded-lg hover:shadow-md"
+          >
+            Submit
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
