@@ -17,7 +17,7 @@ axios.interceptors.request.use(
 );
 
 const edgeFunction = api.create({
-  baseURL: process.env.NEXT_EDGE_FUNCTION_URL,
+  baseURL: "https://bsnrwmmolcbhgncwogox.functions.supabase.co",
   timeout: 10000,
 });
 
