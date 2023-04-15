@@ -17,7 +17,7 @@ axios.interceptors.request.use(
 );
 
 const edgeFunction = api.create({
-  baseURL: process.env.NEXT_EDGE_FUNCTION_URL,
+  baseURL: process.env.NEXT_PUBLIC_EDGE_FUNCTION_URL,
   timeout: 10000,
 });
 
