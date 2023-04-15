@@ -19,18 +19,10 @@ axios.interceptors.request.use(
 const edgeFunction = api.create({
   baseURL: process.env.NEXT_PUBLIC_EDGE_FUNCTION_URL,
   timeout: 10000,
-});
-
-axios.interceptors.request.use(
-  (config) => {
-    const token = ""; //test token
-    config.headers.Authorization = `Bearer ${token}`;
-    return config;
+  headers: {
+    Authorization: process.env.NEXT_PUBLIC_SUPABASE_KEY,
   },
-  (error) => {
-    // TODO: handle errors
-  }
-);
+});
 
 export default axios;
 export { edgeFunction };
