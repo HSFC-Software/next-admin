@@ -17,13 +17,14 @@ axios.interceptors.request.use(
 );
 
 const edgeFunction = api.create({
-  baseURL: "https://bsnrwmmolcbhgncwogox.functions.supabase.co",
+  baseURL: process.env.NEXT_EDGE_FUNCTION_URL,
   timeout: 10000,
 });
 
 axios.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("access_token");
+    const token =
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJzbnJ3bW1vbGNiaGduY3dvZ294Iiwicm9sZSI6ImFub24iLCJpYXQiOjE2NzQ3MzM1MTAsImV4cCI6MTk5MDMwOTUxMH0.Vgv78ZxFTJQ1Dl7pCn352dE_TfE_cveRLqEB7pa_w4s"; //test token
     config.headers.Authorization = `Bearer ${token}`;
     return config;
   },
