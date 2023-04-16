@@ -36,11 +36,13 @@ export default function NetworkConsolidator() {
   const [isAssigning, setIsAssigning] = useState(false);
   const [showCreateVipModal, setShowCreateVipModal] = useState(false);
 
-  useEffect(() => {
+  function getVips() {
     axios.get("/api/vips").then((res) => {
       setVips(res.data);
     });
-  }, []);
+  }
+
+  useEffect(getVips, []);
 
   const onKeyPress = () => {
     setConsolidators(null);
@@ -207,13 +209,18 @@ export default function NetworkConsolidator() {
       )}
       <CreateVip
         isVisible={showCreateVipModal}
+        onSuccess={getVips}
         onCancel={() => setShowCreateVipModal(false)}
       />
     </>
   );
 }
 
-function CreateVip(props: { isVisible: boolean; onCancel: () => void }) {
+function CreateVip(props: {
+  isVisible: boolean;
+  onCancel: () => void;
+  onSuccess: () => void;
+}) {
   const [first_name, setFirst_name] = useState("");
   const [last_name, setLast_name] = useState("");
   const [contact_number, setContact_number] = useState("");
@@ -223,7 +230,12 @@ function CreateVip(props: { isVisible: boolean; onCancel: () => void }) {
   const handleSubmit = () => {
     handleNewVip(
       { first_name, last_name, contact_number },
-      { onSettled: props.onCancel }
+      {
+        onSettled: () => {
+          props.onSuccess();
+          props.onCancel();
+        },
+      }
     );
   };
 
