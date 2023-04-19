@@ -20,7 +20,7 @@ const edgeFunction = api.create({
   baseURL: process.env.NEXT_PUBLIC_EDGE_FUNCTION_URL,
   timeout: 10000,
   headers: {
-    Authorization: process.env.NEXT_PUBLIC_SUPABASE_KEY,
+    Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_KEY}`,
   },
 });
 
