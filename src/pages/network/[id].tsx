@@ -339,10 +339,7 @@ export default function NetworkDetails() {
                       }`}
                     >
                       <td className="py-2 rounded-l-lg">
-                        <Link
-                          id={item.id}
-                          href={`/taytay/network/${item.id}`}
-                        />
+                        <Link id={item.id} href={`/network/${item.id}`} />
                       </td>
                       <td className="py-2">
                         {item?.disciple_id?.first_name ?? ""}
@@ -408,7 +405,7 @@ export default function NetworkDetails() {
                       <td className="py-2 rounded-l-lg">
                         <Link
                           id={item.networks_id.id}
-                          href={`/taytay/network/${item.networks_id.id}`}
+                          href={`/network/${item.networks_id.id}`}
                         />
                       </td>
                       <td className="py-2">{item.networks_id.name}</td>

@@ -263,7 +263,7 @@ export default function Networks() {
                     }`}
                   >
                     <td className="py-2 rounded-l-lg">
-                      <Link id={item.id} href={`/taytay/network/${item.id}`} />
+                      <Link id={item.id} href={`/network/${item.id}`} />
                     </td>
                     <td className="py-2">{item.name}</td>
                     <td className="py-2">

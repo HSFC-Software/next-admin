@@ -17,3 +17,20 @@ export const newVip = async (payload: NewVipPayload) => {
     return Promise.reject(err);
   }
 };
+
+export const signIn = async (token: string) => {
+  try {
+    const { data } = await edgeFunction.post(
+      `/auth`,
+      {},
+      {
+        headers: {
+          "X-Authorization-Key": token,
+        },
+      }
+    );
+    return data;
+  } catch (err) {
+    return Promise.reject(err);
+  }
+};

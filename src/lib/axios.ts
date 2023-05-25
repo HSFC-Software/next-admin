@@ -21,6 +21,7 @@ const edgeFunction = api.create({
   timeout: 10000,
   headers: {
     Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_KEY}`,
+    client_id: "directors-access",
   },
 });
 

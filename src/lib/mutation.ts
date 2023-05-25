@@ -1,5 +1,5 @@
 import { useMutation } from "react-query";
-import { newVip, NewVipPayload } from "./api";
+import { newVip, NewVipPayload, signIn } from "./api";
 
 export const useNewVip = () => {
   // const queryClient = useQueryClient();
@@ -9,4 +9,10 @@ export const useNewVip = () => {
       // queryClient.invalidateQueries(["getSubNetworks", { id: network_id }]);
     },
   });
+};
+
+export const useSignIn = () => {
+  return useMutation<unknown, unknown, string>((token: string) =>
+    signIn(token)
+  );
 };

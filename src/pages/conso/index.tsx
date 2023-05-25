@@ -17,7 +17,7 @@ export default function Consolidation() {
       <Layout activeRoute="conso">
         <div className="flex flex-col gap-4">
           <div>
-            <Link href="/taytay/conso/list">
+            <Link href="/conso/list">
               <button className="gap-2 flex justify-center bg-[#6474dc] hover:bg-[#4c55dc] text-xs font-extrabold text-white py-3 px-4 rounded-lg hover:shadow-md">
                 <span className="text-md">
                   <AiOutlineUsergroupAdd />
@@ -27,7 +27,7 @@ export default function Consolidation() {
             </Link>
           </div>
           <div>
-            <Link href="/taytay/conso/assign">
+            <Link href="/conso/assign">
               <button className="gap-2 flex justify-center bg-[#6474dc] hover:bg-[#4c55dc] text-xs font-extrabold text-white py-3 px-4 rounded-lg hover:shadow-md">
                 <span className="text-md">
                   <MdOutlineAssignmentInd />
@@ -37,7 +37,7 @@ export default function Consolidation() {
             </Link>
           </div>
           <div>
-            <Link href="/taytay/conso/network">
+            <Link href="/conso/network">
               <button className="gap-2 flex justify-center bg-[#6474dc] hover:bg-[#4c55dc] text-xs font-extrabold text-white py-3 px-4 rounded-lg hover:shadow-md">
                 <span className="text-md">
                   <AiOutlineUsergroupAdd />

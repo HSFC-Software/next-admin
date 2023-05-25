@@ -4,12 +4,28 @@ import { RiHome5Line } from "react-icons/ri";
 import { BiNetworkChart } from "react-icons/bi";
 import { ReactNode } from "react";
 import Link from "next/link";
+import { deleteCookie } from "cookies-next";
+import { useRouter } from "next/router";
+import { supabase } from "@/lib/supabase";
 
 export default function Layout(props: {
   children: ReactNode;
   activeRoute?: string;
 }) {
+  const router = useRouter();
   const { children, activeRoute } = props;
+
+  const handleSignOut = () => {
+    // remove cookie
+    deleteCookie("token");
+
+    // refresh page
+    router.reload();
+
+    supabase.auth.signOut();
+    // todo: send request to server to invalidate session.
+  };
+
   return (
     <>
       <div className="w-screen h-screen bg-white flex p-2 overflow-hidden">
@@ -30,7 +46,7 @@ export default function Layout(props: {
               Sam
             </div>
             <div className="mt-8 font-medium flex flex-col gap-2">
-              <Link href="/taytay">
+              <Link href="/">
                 <li
                   className={`flex items-center cursor-pointer py-3 px-4 rounded-lg text-sm text-[#3c4151] ${
                     activeRoute === "home" ? "font-extrabold bg-[#e0e9f1]" : ""
@@ -42,7 +58,7 @@ export default function Layout(props: {
                   <div>Home</div>
                 </li>
               </Link>
-              <Link href="/taytay/conso">
+              <Link href="/conso">
                 <li
                   className={`flex items-center cursor-pointer hover:bg-[#e0e9f1] py-3 px-4 rounded-lg text-sm text-[#3c4151] ${
                     activeRoute === "conso" ? "font-extrabold bg-[#e0e9f1]" : ""
@@ -54,7 +70,7 @@ export default function Layout(props: {
                   <div>Consolidation</div>
                 </li>
               </Link>
-              <Link href="/taytay/network">
+              <Link href="/network">
                 <li
                   className={`flex items-center cursor-pointer hover:bg-[#e0e9f1] py-3 px-4 rounded-lg text-sm text-[#3c4151] ${
                     activeRoute === "network"
@@ -76,6 +92,12 @@ export default function Layout(props: {
               </li>
               <li className="py-3 px-4 block cursor-pointer hover:underline text-slate-500 hover:text-blue-500">
                 Go to your website
+              </li>
+              <li
+                onClick={handleSignOut}
+                className="py-3 px-4 block cursor-pointer hover:underline text-slate-500 hover:text-blue-500"
+              >
+                Sign out
               </li>
             </div>
           </div>
