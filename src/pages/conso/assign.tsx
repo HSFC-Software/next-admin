@@ -4,15 +4,16 @@ import Head from "next/head";
 import { useEffect, useState } from "react";
 import moment from "moment";
 import { AiOutlineUsergroupAdd } from "react-icons/ai";
-import debounce from "lodash.debounce";
 import { Consolidators } from "./network";
 import { useNewVip } from "@/lib/mutation";
 import { RiAddCircleFill } from "react-icons/ri";
+import { useGetVips } from "@/lib/queries";
 
 type VIP = {
   id: string;
   created_at: string;
-  disciple_id: {
+  status: "ASSIGNED" | "PENDING";
+  disciples: {
     id: string;
     created_at: string;
     first_name: string;
@@ -28,7 +29,7 @@ type VIP = {
 };
 
 export default function NetworkConsolidator() {
-  const [vips, setVips] = useState<VIP[] | null>(null);
+  const [_, setVips] = useState<VIP[] | null>(null);
   const [selectedVip, setSelectedVip] = useState<VIP | null>(null);
   const [consolidators, setConsolidators] = useState<Consolidators[] | null>();
   const [selectedConsolidator, setSelectedConsolidator] =
@@ -36,6 +37,9 @@ export default function NetworkConsolidator() {
   const [isAssigning, setIsAssigning] = useState(false);
   const [showCreateVipModal, setShowCreateVipModal] = useState(false);
   const [searchQ, setSearchQ] = useState("");
+  const { data: _vips, refetch: getVip } = useGetVips("PENDING");
+
+  const vips = _vips || [];
 
   const _consolidators = consolidators?.filter((item) => {
     const keywords = searchQ.trim().split(" ");
@@ -54,41 +58,23 @@ export default function NetworkConsolidator() {
     return false;
   });
 
-  console.log(searchQ, _consolidators);
-
-  function getVips() {
-    axios.get("/api/vips").then((res) => {
-      setVips(res.data);
-    });
-  }
-
   function getConsolidators() {
     axios.get(`/api/consolidators?q=`).then((res) => {
-      console.log("🚀 ~ file: assign.tsx:58 ~ axios.get ~ res.data:", res.data);
       setConsolidators(res.data);
     });
   }
 
   useEffect(() => {
-    getVips();
     getConsolidators();
   }, []);
 
   const onKeyPress = (e: any) => {
-    // setConsolidators(null);
     setSelectedConsolidator(null);
   };
 
-  const onChange = (e) => {
+  const onChange = (e: any) => {
     setSearchQ(e.target.value);
   };
-  // debounce((e: any) => {
-  //   // axios.get(`/api/consolidators?q=${e.target.value}`).then((res) => {
-  //   //   setConsolidators(res.data);
-  //   // });
-
-  //   setSearchQ(e.target.value);
-  // }, 1000);
 
   const handleAssign = () => {
     setIsAssigning(true);
@@ -96,7 +82,7 @@ export default function NetworkConsolidator() {
       .post("/api/consolidations", {
         lesson_code: "L1",
         consolidator_id: selectedConsolidator?.disciples_id.id,
-        disciple_id: selectedVip?.disciple_id.id,
+        disciple_id: selectedVip?.disciples.id,
       })
       .then(() => {
         setSelectedConsolidator(null);
@@ -136,7 +122,7 @@ export default function NetworkConsolidator() {
             </tr>
           </thead>
           <tbody>
-            {vips?.map((item, index) => {
+            {vips?.map((item: any, index: number) => {
               const isLast = vips.length - 1 === index;
               return (
                 <tr
@@ -146,7 +132,7 @@ export default function NetworkConsolidator() {
                   key={item.id}
                 >
                   <td className="py-1 pl-2 rounded-l-xl">
-                    {item.disciple_id.first_name} {item.disciple_id.last_name}
+                    {item.disciples.first_name} {item.disciples.last_name}
                   </td>
                   <td className="py-1">
                     {moment(item.created_at).format("LLL")}
@@ -175,7 +161,7 @@ export default function NetworkConsolidator() {
               <header className="text-center font-bold text-2xl text-[#3c4151]">
                 Assign Consolidator to{" "}
                 <span className="capitalize">
-                  {selectedVip.disciple_id.first_name}
+                  {selectedVip.disciples.first_name}
                 </span>
               </header>
               <div className="mt-4">
@@ -186,6 +172,14 @@ export default function NetworkConsolidator() {
                   placeholder="Search"
                   className="w-full px-4 py-2 border-2 rounded-2xl mt-2"
                 />
+              </div>
+              <div className="my-4">
+                <div className="text-sm text-center">
+                  <div className="text-gray-500">Consolidator not found?</div>
+                  <button className="underline text-[#6474dc]">
+                    Add new consolidator instead.
+                  </button>
+                </div>
               </div>
               {Boolean(searchQ) && _consolidators && (
                 <div className="max-h-[150px] overflow-y-auto flex flex-col py-2">
@@ -244,7 +238,7 @@ export default function NetworkConsolidator() {
       )}
       <CreateVip
         isVisible={showCreateVipModal}
-        onSuccess={getVips}
+        onSuccess={getVip}
         onCancel={() => setShowCreateVipModal(false)}
       />
     </>

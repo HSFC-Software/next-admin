@@ -52,3 +52,22 @@ export const sendBulkSms = async (
     return Promise.reject(err);
   }
 };
+
+export const getVips = async (status?: "ASSIGNED" | "PENDING") => {
+  let endpoint = "/v2/vips";
+  if (status) {
+    endpoint = `/v2/vips?status=${status}`;
+  }
+
+  let response, error;
+
+  response = await edgeFunction
+    .get(endpoint) //
+    .catch((err) => (error = err));
+
+  if (error) {
+    return Promise.reject(error);
+  }
+
+  return response.data;
+};
