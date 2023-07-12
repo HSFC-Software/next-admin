@@ -35,6 +35,26 @@ export default function NetworkConsolidator() {
     useState<Consolidators | null>(null);
   const [isAssigning, setIsAssigning] = useState(false);
   const [showCreateVipModal, setShowCreateVipModal] = useState(false);
+  const [searchQ, setSearchQ] = useState("");
+
+  const _consolidators = consolidators?.filter((item) => {
+    const keywords = searchQ.trim().split(" ");
+
+    for (let word of keywords) {
+      if (
+        item.disciples_id.first_name
+          .toLowerCase()
+          .includes(word.toLowerCase()) ||
+        item.disciples_id.last_name.toLowerCase().includes(word.toLowerCase())
+      ) {
+        return true;
+      }
+    }
+
+    return false;
+  });
+
+  console.log(searchQ, _consolidators);
 
   function getVips() {
     axios.get("/api/vips").then((res) => {
@@ -42,18 +62,33 @@ export default function NetworkConsolidator() {
     });
   }
 
-  useEffect(getVips, []);
+  function getConsolidators() {
+    axios.get(`/api/consolidators?q=`).then((res) => {
+      console.log("🚀 ~ file: assign.tsx:58 ~ axios.get ~ res.data:", res.data);
+      setConsolidators(res.data);
+    });
+  }
 
-  const onKeyPress = () => {
-    setConsolidators(null);
+  useEffect(() => {
+    getVips();
+    getConsolidators();
+  }, []);
+
+  const onKeyPress = (e: any) => {
+    // setConsolidators(null);
     setSelectedConsolidator(null);
   };
 
-  const onChange = debounce((e: any) => {
-    axios.get(`/api/consolidators?q=${e.target.value}`).then((res) => {
-      setConsolidators(res.data);
-    });
-  }, 1000);
+  const onChange = (e) => {
+    setSearchQ(e.target.value);
+  };
+  // debounce((e: any) => {
+  //   // axios.get(`/api/consolidators?q=${e.target.value}`).then((res) => {
+  //   //   setConsolidators(res.data);
+  //   // });
+
+  //   setSearchQ(e.target.value);
+  // }, 1000);
 
   const handleAssign = () => {
     setIsAssigning(true);
@@ -152,9 +187,9 @@ export default function NetworkConsolidator() {
                   className="w-full px-4 py-2 border-2 rounded-2xl mt-2"
                 />
               </div>
-              {consolidators && (
+              {Boolean(searchQ) && _consolidators && (
                 <div className="max-h-[150px] overflow-y-auto flex flex-col py-2">
-                  {consolidators?.map((item) => {
+                  {_consolidators?.map((item) => {
                     return (
                       <li
                         key={item.id}
