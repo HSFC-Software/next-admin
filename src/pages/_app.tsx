@@ -5,6 +5,7 @@ import type { AppProps } from "next/app";
 import { Hydrate, QueryClient, QueryClientProvider } from "react-query";
 import { useState } from "react";
 import { ToastContainer } from "react-toastify";
+import Application from "@/app";
 
 export default function App({ Component, pageProps }: AppProps) {
   const [queryClient] = useState(() => new QueryClient());
@@ -12,7 +13,9 @@ export default function App({ Component, pageProps }: AppProps) {
   return (
     <QueryClientProvider client={queryClient}>
       <Hydrate state={pageProps.dehydratedState}>
-        <Component {...pageProps} />
+        <Application>
+          <Component {...pageProps} />
+        </Application>
         <ToastContainer />
       </Hydrate>
     </QueryClientProvider>

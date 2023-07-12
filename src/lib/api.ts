@@ -71,3 +71,12 @@ export const getVips = async (status?: "ASSIGNED" | "PENDING") => {
 
   return response.data;
 };
+
+export const getConsolidators = async () => {
+  try {
+    const { data } = await edgeFunction.get(`/v2/consolidators`);
+    return data;
+  } catch (err) {
+    return Promise.reject(err);
+  }
+};

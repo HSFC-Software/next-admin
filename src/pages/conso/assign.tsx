@@ -7,7 +7,10 @@ import { AiOutlineUsergroupAdd } from "react-icons/ai";
 import { Consolidators } from "./network";
 import { useNewVip } from "@/lib/mutation";
 import { RiAddCircleFill } from "react-icons/ri";
-import { useGetVips } from "@/lib/queries";
+import { useGetConsolidators, useGetVips } from "@/lib/queries";
+import useRootActions from "@/lib/state/useRootActions";
+import { useRouter } from "next/router";
+import { getRootProps } from "@/lib/state";
 
 type VIP = {
   id: string;
@@ -29,27 +32,28 @@ type VIP = {
 };
 
 export default function NetworkConsolidator() {
+  const router = useRouter();
+  const actions = useRootActions();
+
   const [_, setVips] = useState<VIP[] | null>(null);
   const [selectedVip, setSelectedVip] = useState<VIP | null>(null);
-  const [consolidators, setConsolidators] = useState<Consolidators[] | null>();
   const [selectedConsolidator, setSelectedConsolidator] =
     useState<Consolidators | null>(null);
   const [isAssigning, setIsAssigning] = useState(false);
   const [showCreateVipModal, setShowCreateVipModal] = useState(false);
   const [searchQ, setSearchQ] = useState("");
   const { data: _vips, refetch: getVip } = useGetVips("PENDING");
+  const { data: consolidators } = useGetConsolidators();
 
   const vips = _vips || [];
 
-  const _consolidators = consolidators?.filter((item) => {
+  const _consolidators = (consolidators ?? [])?.filter((item: any) => {
     const keywords = searchQ.trim().split(" ");
 
     for (let word of keywords) {
       if (
-        item.disciples_id.first_name
-          .toLowerCase()
-          .includes(word.toLowerCase()) ||
-        item.disciples_id.last_name.toLowerCase().includes(word.toLowerCase())
+        item.disciples.first_name.toLowerCase().includes(word.toLowerCase()) ||
+        item.disciples.last_name.toLowerCase().includes(word.toLowerCase())
       ) {
         return true;
       }
@@ -58,21 +62,8 @@ export default function NetworkConsolidator() {
     return false;
   });
 
-  function getConsolidators() {
-    axios.get(`/api/consolidators?q=`).then((res) => {
-      setConsolidators(res.data);
-    });
-  }
-
-  useEffect(() => {
-    getConsolidators();
-  }, []);
-
-  const onKeyPress = (e: any) => {
-    setSelectedConsolidator(null);
-  };
-
   const onChange = (e: any) => {
+    setSelectedConsolidator(null);
     setSearchQ(e.target.value);
   };
 
@@ -81,7 +72,7 @@ export default function NetworkConsolidator() {
     axios
       .post("/api/consolidations", {
         lesson_code: "L1",
-        consolidator_id: selectedConsolidator?.disciples_id.id,
+        consolidator_id: selectedConsolidator?.disciples.id,
         disciple_id: selectedVip?.disciples.id,
       })
       .then(() => {
@@ -92,6 +83,35 @@ export default function NetworkConsolidator() {
           setVips(res.data);
         });
       });
+  };
+
+  const handleAddConsolidator = () => {
+    actions?.handleAddNewConsolidatorFromVip(String(selectedVip?.id), searchQ);
+    router.push(`/conso/network?assignToNew=true`);
+  };
+
+  useEffect(() => {
+    if (vips) {
+      if (router?.query?.assignToNew) {
+        const vip = getRootProps<any>("consolidation.vip");
+        const selected = vip.selectedId ?? "";
+        setSearchQ(vip?.consolidatorQ);
+
+        const assignBtn = document.getElementById(`btn-${selected}`);
+
+        if (assignBtn) assignBtn?.click?.();
+      }
+    }
+  }, [vips]);
+
+  const handleCloseAssign = () => {
+    if (router?.query?.assignToNew) {
+      actions?.handleAddNewConsolidatorFromVip("", "");
+      router.push(`/conso/assign`);
+      setSearchQ("");
+    }
+
+    setSelectedVip(null);
   };
 
   return (
@@ -139,6 +159,7 @@ export default function NetworkConsolidator() {
                   </td>
                   <td className="py-1 pl-2 rounded-r-xl ">
                     <button
+                      id={`btn-${item.id}`}
                       onClick={() => setSelectedVip(item)}
                       className="gap-2 flex justify-center bg-[#6474dc] hover:bg-[#4c55dc] text-xs font-extrabold text-white py-2 px-3 rounded-lg hover:shadow-md"
                     >
@@ -168,50 +189,54 @@ export default function NetworkConsolidator() {
                 <input
                   id="input-search-conso"
                   onChange={onChange}
-                  onKeyPress={onKeyPress}
+                  value={searchQ}
                   placeholder="Search"
                   className="w-full px-4 py-2 border-2 rounded-2xl mt-2"
                 />
               </div>
-              <div className="my-4">
-                <div className="text-sm text-center">
-                  <div className="text-gray-500">Consolidator not found?</div>
-                  <button className="underline text-[#6474dc]">
-                    Add new consolidator instead.
-                  </button>
-                </div>
-              </div>
-              {Boolean(searchQ) && _consolidators && (
-                <div className="max-h-[150px] overflow-y-auto flex flex-col py-2">
-                  {_consolidators?.map((item) => {
-                    return (
-                      <li
-                        key={item.id}
-                        onClick={() => {
-                          setSelectedConsolidator(item);
-                          setConsolidators(null);
-                          (
-                            document.getElementById(
-                              "input-search-conso"
-                            ) as HTMLInputElement
-                          ).value = `${item.disciples_id.first_name ?? ""} ${
-                            item.disciples_id?.last_name ?? ""
-                          }`;
-                        }}
-                        className="block py-2 hover:bg-[#f4f7fa] px-4 rounded-lg cursor-pointer"
-                      >
-                        {item.disciples_id.first_name}{" "}
-                        {item?.disciples_id?.last_name}
-                      </li>
-                    );
-                  })}
+              {Boolean(searchQ) && !_consolidators?.length && (
+                <div className="my-4">
+                  <div className="text-sm text-center">
+                    <div className="text-gray-500">Consolidator not found?</div>
+                    <button
+                      onClick={handleAddConsolidator}
+                      className="underline text-[#6474dc]"
+                    >
+                      Add new consolidator instead.
+                    </button>
+                  </div>
                 </div>
               )}
+              {Boolean(searchQ) &&
+                !!_consolidators?.length &&
+                !selectedConsolidator && (
+                  <div className="max-h-[150px] overflow-y-auto flex flex-col py-2">
+                    {_consolidators?.map((item) => {
+                      return (
+                        <li
+                          key={item.id}
+                          onClick={() => {
+                            setSelectedConsolidator(item);
+                            setSearchQ(
+                              `${item.disciples.first_name ?? ""} ${
+                                item.disciples?.last_name ?? ""
+                              }`
+                            );
+                          }}
+                          className="block py-2 hover:bg-[#f4f7fa] px-4 rounded-lg cursor-pointer"
+                        >
+                          {item.disciples.first_name}{" "}
+                          {item?.disciples?.last_name}
+                        </li>
+                      );
+                    })}
+                  </div>
+                )}
               <div className="mt-5">
                 <div className="flex gap-2">
                   <button
                     disabled={isAssigning}
-                    onClick={() => setSelectedVip(null)}
+                    onClick={handleCloseAssign}
                     className={`grow gap-2 flex justify-center ${
                       !!selectedConsolidator
                         ? "bg-[#e0e9f1] hover:bg-[#e0e9f1]"

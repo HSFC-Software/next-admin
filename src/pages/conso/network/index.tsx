@@ -3,7 +3,8 @@ import axios from "@/lib/axios";
 import Head from "next/head";
 import { useEffect, useState } from "react";
 import { RiCloseCircleFill } from "react-icons/ri";
-import debounce from "lodash.debounce";
+import { getRootProps } from "@/lib/state";
+import { useRouter } from "next/router";
 
 type Disciples = {
   id: string;
@@ -20,6 +21,8 @@ export type Consolidators = {
 };
 
 export default function NetworkConsolidator() {
+  const router = useRouter();
+
   const [consolidators, setConsolidators] = useState<Consolidators[] | null>(
     null
   );
@@ -32,15 +35,18 @@ export default function NetworkConsolidator() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [isAddingDisciple, setIsAddingDisciple] = useState(false);
 
+  const [searchQ, setSearchQ] = useState("");
+
   const onKeyPress = () => {
     setDisciplesSearch(null);
   };
 
-  const onChange = debounce((e: any) => {
+  const onChange = (e: any) => {
+    setSearchQ(e.target.value);
     axios.get(`/api/disciples?q=${e.target.value}`).then((res) => {
       setDisciplesSearch(res.data);
     });
-  }, 1000);
+  };
 
   const handleAddConsolidator = () => {
     setIsAddingDisciple(true);
@@ -60,6 +66,25 @@ export default function NetworkConsolidator() {
       setConsolidators(res.data);
     });
   }, []);
+
+  useEffect(() => {
+    if (router?.query?.assignToNew) {
+      if (!showAddModal) setShowAddModal(true);
+      const vip: any = getRootProps("consolidation.vip");
+      setSearchQ(vip?.consolidatorQ);
+
+      // Todo: remove this when useQuery of getting of disciples is done
+      onChange({ target: { value: vip?.consolidatorQ } });
+    }
+  }, []);
+
+  const handleCloseModal = () => {
+    if (router?.query?.assignToNew) {
+      router.push("/conso/assign?assignToNew=true");
+    } else {
+      setShowAddModal(false);
+    }
+  };
 
   // todo: prevent double entry
 
@@ -134,7 +159,7 @@ export default function NetworkConsolidator() {
           <div className="flex w-full h-full justify-center items-center">
             <div className="bg-white rounded-2xl w-[560px] relative p-7">
               <div className="absolute top-0 right-0 p-4 text-2xl text-gray-600">
-                <button onClick={() => setShowAddModal(false)}>
+                <button onClick={handleCloseModal}>
                   <RiCloseCircleFill />
                 </button>
               </div>
@@ -145,6 +170,7 @@ export default function NetworkConsolidator() {
                 <input
                   onKeyPress={onKeyPress}
                   onChange={onChange}
+                  value={searchQ}
                   id="input-search-conso"
                   placeholder="Search"
                   className="w-full px-4 py-2 border-2 rounded-2xl mt-2"
