@@ -7,6 +7,7 @@ import Link from "next/link";
 import { deleteCookie } from "cookies-next";
 import { useRouter } from "next/router";
 import { supabase } from "@/lib/supabase";
+import { TbSend } from "react-icons/tb";
 
 export default function Layout(props: {
   children: ReactNode;
@@ -82,6 +83,18 @@ export default function Layout(props: {
                     <BiNetworkChart />
                   </span>
                   <div>Network</div>
+                </li>
+              </Link>
+              <Link href="/sms">
+                <li
+                  className={`flex items-center cursor-pointer hover:bg-[#e0e9f1] py-3 px-4 rounded-lg text-sm text-[#3c4151] ${
+                    activeRoute === "sms" ? "font-extrabold bg-[#e0e9f1]" : ""
+                  }`}
+                >
+                  <span className="w-[35px] text-xl opacity-[.8]">
+                    <TbSend />
+                  </span>
+                  <div>SMS Text Blast</div>
                 </li>
               </Link>
             </div>

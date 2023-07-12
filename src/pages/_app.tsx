@@ -12,7 +12,7 @@ export default function App({ Component, pageProps }: AppProps) {
   return (
     <QueryClientProvider client={queryClient}>
       <Hydrate state={pageProps.dehydratedState}>
-        <Component {...pageProps} />;
+        <Component {...pageProps} />
         <ToastContainer />
       </Hydrate>
     </QueryClientProvider>
