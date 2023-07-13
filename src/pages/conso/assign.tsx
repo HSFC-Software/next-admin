@@ -194,19 +194,7 @@ export default function NetworkConsolidator() {
                   className="w-full px-4 py-2 border-2 rounded-2xl mt-2"
                 />
               </div>
-              {Boolean(searchQ) && !_consolidators?.length && (
-                <div className="my-4">
-                  <div className="text-sm text-center">
-                    <div className="text-gray-500">Consolidator not found?</div>
-                    <button
-                      onClick={handleAddConsolidator}
-                      className="underline text-[#6474dc]"
-                    >
-                      Add new consolidator instead.
-                    </button>
-                  </div>
-                </div>
-              )}
+
               {Boolean(searchQ) &&
                 !!_consolidators?.length &&
                 !selectedConsolidator && (
@@ -232,6 +220,19 @@ export default function NetworkConsolidator() {
                     })}
                   </div>
                 )}
+              {Boolean(searchQ) && _consolidators?.length <= 3 && (
+                <div className="my-4">
+                  <div className="text-sm text-center">
+                    <div className="text-gray-500">Consolidator not found?</div>
+                    <button
+                      onClick={handleAddConsolidator}
+                      className="underline text-[#6474dc]"
+                    >
+                      Add new consolidator instead.
+                    </button>
+                  </div>
+                </div>
+              )}
               <div className="mt-5">
                 <div className="flex gap-2">
                   <button

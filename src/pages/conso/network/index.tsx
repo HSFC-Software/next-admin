@@ -5,6 +5,9 @@ import { useEffect, useState } from "react";
 import { RiCloseCircleFill } from "react-icons/ri";
 import { getRootProps } from "@/lib/state";
 import { useRouter } from "next/router";
+import { useDebounce } from "@/lib/hooks";
+import { useGetConsolidators, useGetDisciples } from "@/lib/queries";
+import { useQueryClient } from "react-query";
 
 type Disciples = {
   id: string;
@@ -22,59 +25,55 @@ export type Consolidators = {
 
 export default function NetworkConsolidator() {
   const router = useRouter();
+  const queryClient = useQueryClient();
 
-  const [consolidators, setConsolidators] = useState<Consolidators[] | null>(
-    null
-  );
-  const [disciplesSearch, setDisciplesSearch] = useState<Disciples[] | null>(
-    null
-  );
   const [selectedDisciple, setSelectedDisciple] = useState<Disciples | null>(
     null
   );
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [isAddingDisciple, setIsAddingDisciple] = useState(false);
 
   const [searchQ, setSearchQ] = useState("");
+  const debouncedSearch = useDebounce(searchQ, 500);
 
-  const onKeyPress = () => {
-    setDisciplesSearch(null);
-  };
+  const { data: disciplesSearch, isLoading: isSearching } =
+    useGetDisciples(debouncedSearch);
+  const { data: consolidators } = useGetConsolidators();
+
+  const filteredDisciples = disciplesSearch?.filter((item: any) => {
+    const id = item.id;
+    if (JSON.stringify(consolidators).includes(id)) return false;
+    return true;
+  });
 
   const onChange = (e: any) => {
+    setSelectedDisciple(null);
     setSearchQ(e.target.value);
-    axios.get(`/api/disciples?q=${e.target.value}`).then((res) => {
-      setDisciplesSearch(res.data);
-    });
   };
 
   const handleAddConsolidator = () => {
+    if (isAddingDisciple) return;
+
     setIsAddingDisciple(true);
     axios
       .post("/api/consolidators", { disciples_id: selectedDisciple?.id })
       .finally(() => {
+        if (router?.query?.assignToNew) {
+          router.push("/conso/assign?assignToNew=true");
+        }
+
         setIsAddingDisciple(false);
-        axios.get("/api/consolidators").then((res) => {
-          setConsolidators(res.data);
-        });
+        queryClient.invalidateQueries(["getConsolidators"]);
         setShowAddModal(false);
       });
   };
-
-  useEffect(() => {
-    axios.get("/api/consolidators").then((res) => {
-      setConsolidators(res.data);
-    });
-  }, []);
 
   useEffect(() => {
     if (router?.query?.assignToNew) {
       if (!showAddModal) setShowAddModal(true);
       const vip: any = getRootProps("consolidation.vip");
       setSearchQ(vip?.consolidatorQ);
-
-      // Todo: remove this when useQuery of getting of disciples is done
-      onChange({ target: { value: vip?.consolidatorQ } });
     }
   }, []);
 
@@ -85,8 +84,6 @@ export default function NetworkConsolidator() {
       setShowAddModal(false);
     }
   };
-
-  // todo: prevent double entry
 
   return (
     <>
@@ -121,7 +118,7 @@ export default function NetworkConsolidator() {
             </tr>
           </thead>
           <tbody>
-            {consolidators?.map((item, index) => {
+            {consolidators?.map((item: any, index: number) => {
               const isLast = consolidators.length - 1 === index;
               return (
                 <tr
@@ -132,11 +129,11 @@ export default function NetworkConsolidator() {
                 >
                   <td className="py-2 rounded-l-lg"></td>
                   <td className="py-2">
-                    {item.disciples_id.first_name} {item.disciples_id.last_name}
+                    {item.disciples.first_name} {item.disciples.last_name}
                   </td>
                   <td className="py-2 rounded-r-lg">
                     <div className="flex gap-2">
-                      {item.consolidators_lesson.map((code) => {
+                      {item.consolidators_lesson?.map((code: any) => {
                         return (
                           <span
                             className="text-xs px-2 rounded-full font-bold bg-gray-200"
@@ -168,7 +165,6 @@ export default function NetworkConsolidator() {
               </header>
               <div className="mt-4">
                 <input
-                  onKeyPress={onKeyPress}
                   onChange={onChange}
                   value={searchQ}
                   id="input-search-conso"
@@ -176,22 +172,17 @@ export default function NetworkConsolidator() {
                   className="w-full px-4 py-2 border-2 rounded-2xl mt-2"
                 />
               </div>
-              {consolidators && (
+              {!selectedDisciple && Boolean(filteredDisciples?.length) && (
                 <div className="max-h-[150px] overflow-y-auto flex flex-col py-2">
-                  {disciplesSearch?.map((item) => {
+                  {filteredDisciples?.map((item: any) => {
                     return (
                       <li
                         key={item.id}
                         onClick={() => {
                           setSelectedDisciple(item);
-                          setDisciplesSearch(null);
-                          (
-                            document.getElementById(
-                              "input-search-conso"
-                            ) as HTMLInputElement
-                          ).value = `${item.first_name ?? ""} ${
-                            item?.last_name ?? ""
-                          }`;
+                          setSearchQ(
+                            `${item.first_name ?? ""} ${item?.last_name ?? ""}`
+                          );
                         }}
                         className="block py-2 hover:bg-[#f4f7fa] px-4 rounded-lg cursor-pointer"
                       >
@@ -201,6 +192,15 @@ export default function NetworkConsolidator() {
                   })}
                 </div>
               )}
+              {!isSearching &&
+                !filteredDisciples?.length &&
+                Boolean(searchQ.length) && (
+                  <div className="text-center text-gray-500 mt-4">
+                    No results found for {'"'}
+                    {searchQ}
+                    {'"'}
+                  </div>
+                )}
               <div className="mt-5">
                 <div className="flex gap-2">
                   <button

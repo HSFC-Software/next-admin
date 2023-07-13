@@ -80,3 +80,12 @@ export const getConsolidators = async () => {
     return Promise.reject(err);
   }
 };
+
+export const getDisciples = async (q: string) => {
+  try {
+    const { data } = await edgeFunction.get(`/v2/disciples?q=${q}`);
+    return data;
+  } catch (err) {
+    return Promise.reject(err);
+  }
+};
