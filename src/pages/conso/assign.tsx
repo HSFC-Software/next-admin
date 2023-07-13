@@ -280,7 +280,7 @@ function CreateVip(props: {
   const [last_name, setLast_name] = useState("");
   const [contact_number, setContact_number] = useState("");
 
-  const { mutate: handleNewVip } = useNewVip();
+  const { mutate: handleNewVip, isLoading } = useNewVip();
 
   const handleSubmit = () => {
     handleNewVip(
@@ -332,6 +332,7 @@ function CreateVip(props: {
             Cancel
           </button>
           <button
+            disabled={isLoading}
             onClick={handleSubmit}
             className="mt-4 w-full flex justify-center disabled:bg-[#e0e9f1] bg-[#6474dc] hover:bg-[#4c55dc] text-xs font-extrabold text-white py-3 px-4 rounded-lg hover:shadow-md"
           >
