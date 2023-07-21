@@ -61,6 +61,7 @@ const createComponent = ({
       };
       store.subscribe(handler);
       return () => store.unsubscribe(handler);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
     return state;
   };
@@ -115,6 +116,7 @@ const createComponent = ({
     ConsumerProps.store = store;
   }
 
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   useRef?.({
     store,
     context: Provider,
@@ -125,6 +127,7 @@ const createComponent = ({
     useRegisterQuery,
   });
 
+  // eslint-disable-next-line react/display-name
   return ({ children }: { children?: ReactNode }) => {
     if (children) {
       if (component) _component = <Component>{children}</Component>;

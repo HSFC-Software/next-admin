@@ -1,5 +1,6 @@
-/* eslint-disable @typescript-eslint/naming-convention */
-import { Obj } from '@/types';
+type Obj = {
+  [key: string]: unknown;
+};
 
 /** Using global variable is a bad practice. 
     We should use them sparingly since they can introduce bugs and reduce our code’s modularity.
@@ -12,9 +13,9 @@ import { Obj } from '@/types';
 export const UNSAFE_registerProperty = (key: string, value: unknown): void => {
   if (Boolean((global as Obj)[key])) {
     console.warn(
-      'file: global/index.ts:15 ~ UNSAFE_registerMethod:',
-      'Overwriting existing property. [PROPERTY_NAME]:',
-      key,
+      "file: global/index.ts:15 ~ UNSAFE_registerMethod:",
+      "Overwriting existing property. [PROPERTY_NAME]:",
+      key
     );
   }
   (global as Obj)[key] = value;
@@ -22,13 +23,13 @@ export const UNSAFE_registerProperty = (key: string, value: unknown): void => {
 
 export const UNSAFE_registerMethod = (
   key: string,
-  handler: () => void,
+  handler: () => void
 ): void => {
   if (Boolean((global as Obj)[key])) {
     console.warn(
-      'file: global/index.ts:15 ~ UNSAFE_registerMethod:',
-      'Overwriting existing method. [METHOD_NAME]:',
-      key,
+      "file: global/index.ts:15 ~ UNSAFE_registerMethod:",
+      "Overwriting existing method. [METHOD_NAME]:",
+      key
     );
   }
   (global as Obj)[key] = handler;

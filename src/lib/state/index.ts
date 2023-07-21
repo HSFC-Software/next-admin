@@ -3,10 +3,8 @@ import { UNSAFE_retrieveProperty } from "@/lib/global";
 import Store from "@/lib/bit/store";
 import { useProps } from "@/lib/bit";
 
-type GenericFn = <I = undefined>(key: string) => I;
-
 // Use case: Outside React
-export const getRootProps: GenericFn = (key) => {
+export const getRootProps = (key: string) => {
   const store = UNSAFE_retrieveProperty<Store | null>("__BIT_STORE__");
   console.log({ store });
   return store?.getState(key);
