@@ -8,6 +8,7 @@ type GenericFn = <I = undefined>(key: string) => I;
 // Use case: Outside React
 export const getRootProps: GenericFn = (key) => {
   const store = UNSAFE_retrieveProperty<Store | null>("__BIT_STORE__");
+  console.log({ store });
   return store?.getState(key);
 };
 

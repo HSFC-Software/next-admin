@@ -6,12 +6,17 @@ import { ReactNode } from "react";
 import Link from "next/link";
 import { TbSend } from "react-icons/tb";
 import { destroyCookie } from "nookies";
+import { useGetProfileFromToken } from "@/lib/queries";
+import { parseCookies } from "nookies";
+import { RiVipCrown2Line } from "react-icons/ri";
 
 export default function Layout(props: {
   children: ReactNode;
   activeRoute?: string;
 }) {
   const { children, activeRoute } = props;
+  const cookies = parseCookies();
+  const profile = useGetProfileFromToken(cookies.token);
 
   const handleSignOut = () => {
     destroyCookie(null, "token");
@@ -35,7 +40,7 @@ export default function Layout(props: {
               </span>
             </div>
             <div className="px-5 py-4 bg-white rounded-xl font-bold mt-5 text-[#3c4151] shadow-1">
-              Sam
+              {profile?.data?.first_name}
             </div>
             <div className="mt-8 font-medium flex flex-col gap-2">
               <Link href="/">
@@ -50,16 +55,30 @@ export default function Layout(props: {
                   <div>Home</div>
                 </li>
               </Link>
-              <Link href="/conso">
+              <Link href="/consolidations">
                 <li
                   className={`flex items-center cursor-pointer hover:bg-[#e0e9f1] py-3 px-4 rounded-lg text-sm text-[#3c4151] ${
-                    activeRoute === "conso" ? "font-extrabold bg-[#e0e9f1]" : ""
+                    activeRoute === "consolidations"
+                      ? "font-extrabold bg-[#e0e9f1]"
+                      : ""
                   }`}
                 >
                   <span className="w-[35px] text-xl opacity-[.8]">
                     <AiOutlineFire />
                   </span>
                   <div>Consolidation</div>
+                </li>
+              </Link>
+              <Link href="/vips">
+                <li
+                  className={`flex items-center cursor-pointer hover:bg-[#e0e9f1] py-3 px-4 rounded-lg text-sm text-[#3c4151] ${
+                    activeRoute === "vips" ? "font-extrabold bg-[#e0e9f1]" : ""
+                  }`}
+                >
+                  <span className="w-[35px] text-xl opacity-[.8]">
+                    <RiVipCrown2Line />
+                  </span>
+                  <div>VIPs</div>
                 </li>
               </Link>
               <Link href="/network">
@@ -95,7 +114,7 @@ export default function Layout(props: {
                 What&apos;s new
               </li>
               <li className="py-3 px-4 block cursor-pointer hover:underline text-slate-500 hover:text-blue-500">
-                Go to your website
+                <a href="https://taytay.fishgen.org">Go to your website</a>
               </li>
               <li
                 onClick={handleSignOut}
@@ -115,16 +134,16 @@ export default function Layout(props: {
           </div>
         </aside>
         <main className="grow flex flex-col">
-          <div className="flex items-center bg-white sticky top-0 p-5 px-10">
+          {/* <div className="flex items-center bg-white sticky top-0 p-5 px-10">
             <div className="grow">
               <span className="font-bold text-capitalize">Home</span>
             </div>
             <div className="shrink-0">
               <div className="bg-[#3c4151] w-[40px] h-[40px] font-bold flex justify-center items-center text-white rounded-full">
-                S
+                {profile?.data?.first_name[0]}
               </div>
             </div>
-          </div>
+          </div> */}
           <div className="grow overflow-y-auto max-w-5xl mx-auto w-full p-4">
             {children}
           </div>

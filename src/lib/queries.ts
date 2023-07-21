@@ -1,9 +1,11 @@
 import { useQuery } from "react-query";
 import {
+  Profile,
   getConsolidators,
   getDisciples,
   getProfileByEmail,
   getVips,
+  searchProfile,
 } from "./api";
 import jwt from "jsonwebtoken";
 
@@ -50,26 +52,20 @@ export const useGetProfileFromToken = (token: string) => {
     email = userMetadata?.email ?? (data as any)?.email;
   } catch (err) {}
 
-  type Profile = {
-    id: string;
-    created_at: string;
-    first_name: string;
-    middle_name: string;
-    last_name: string;
-    gender?: string;
-    address?: string;
-    contact_number?: string;
-    birthday?: string;
-    is_deleted?: boolean;
-    email: string;
-    sex?: string;
-    status?: "Active" | "Inactive";
-    img_url?: string;
-  };
-
   return useQuery<Profile | null>(
     ["getProfile", { email }],
     async () => await getProfileByEmail(email),
+    {
+      staleTime: 1000 * 60 * 5,
+      enabled: true,
+    }
+  );
+};
+
+export const useSearchProfile = (keyword: string) => {
+  return useQuery(
+    ["searchProfile", { id: keyword }],
+    async () => await searchProfile(keyword),
     {
       staleTime: 1000 * 60 * 5,
       enabled: true,

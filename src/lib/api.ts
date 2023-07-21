@@ -98,3 +98,51 @@ export const getProfileByEmail = async (email: string) => {
     return Promise.reject(err);
   }
 };
+
+export type Profile = {
+  id: string;
+  created_at: string;
+  first_name: string;
+  middle_name: string;
+  last_name: string;
+  gender?: string;
+  address?: string;
+  contact_number?: string;
+  birthday?: string;
+  is_deleted?: boolean;
+  email: string;
+  sex?: string;
+  status?: "Active" | "Inactive";
+  img_url?: string;
+};
+
+export type SearchedProfile = Pick<
+  Profile,
+  "id" | "first_name" | "last_name" | "img_url"
+>;
+
+export const searchProfile = async (
+  keyword: string
+): Promise<SearchedProfile[]> => {
+  if (!keyword) return Promise.reject("No keyword provided");
+  try {
+    const { data } = await edgeFunction.get(`/v2/disciples?q=${keyword}`);
+    return data;
+  } catch (err) {
+    return Promise.reject(err);
+  }
+};
+
+export type AssignConsolidatorType = {
+  disciple_id: string;
+  consolidator_id: string;
+};
+
+export const assignConsolidator = async (payload: AssignConsolidatorType) => {
+  try {
+    const { data } = await edgeFunction.post(`/v2/consolidators`, payload);
+    return data;
+  } catch (err) {
+    return Promise.reject(err);
+  }
+};

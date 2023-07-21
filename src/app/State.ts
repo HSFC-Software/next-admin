@@ -1,4 +1,5 @@
 const state = {
+  token: "",
   consolidation: {
     vip: {
       selectedId: "",

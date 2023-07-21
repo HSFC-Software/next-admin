@@ -2,15 +2,17 @@ import Layout from "@/components/layout";
 import axios from "@/lib/axios";
 import Head from "next/head";
 import { useEffect, useRef, useState } from "react";
-import { RiCloseCircleFill } from "react-icons/ri";
+import { RiCloseCircleFill, RiArrowRightLine, RiLink } from "react-icons/ri";
+import { PiUserBold } from "react-icons/pi";
+
 import debounce from "lodash.debounce";
 import moment, { Moment } from "moment";
 import { IoCaretUpOutline, IoCaretDownOutline } from "react-icons/io5";
-import { RxMixerHorizontal } from "react-icons/rx";
-import { BiExport } from "react-icons/bi";
 import $ from "jquery";
 import "daterangepicker";
-import { getServerSidePropsWithAuth } from "@/lib/server";
+import { useGetConsolidators, useSearchProfile } from "@/lib/queries";
+import { useDebounce } from "@/lib/hooks";
+import { useAssignConsolidator } from "@/lib/mutation";
 
 type Disciples = {
   id: string;
@@ -49,93 +51,80 @@ type Consolidations = {
 type Order = "asc" | "desc";
 
 export default function Consolidations() {
-  const [consolidations, setConsolidations] = useState<Consolidations[] | null>(
-    null
-  );
+  const { data: consolidations } = useGetConsolidators();
+  const { mutate: assignConsolidator, isLoading } = useAssignConsolidator();
 
-  // filters
   const [order, setOrder] = useState<Order>("desc");
   const [sortBy, setSortBy] = useState("created_at");
-  const [lesson, setLesson] = useState("");
-  const [searchPerson, setSearchPerson] = useState<{
-    key: string; // disciple | consolidator
-    value: string;
-  } | null>(null);
-  const [dateRange, setDateRange] = useState<{
-    dateStart: Moment;
-    dateEnd: Moment;
-  } | null>();
 
-  useEffect(() => {
-    const queryObject: { [key: string]: string } = {
-      sortBy,
-      order,
-    };
+  const [q, setQ] = useState("");
+  const debouncedSearch = useDebounce(q, 500);
+  const [consolidator, setConsolidator] = useState("");
+  const [disciple, setDisciple] = useState("");
 
-    if (lesson) {
-      queryObject.lesson = lesson;
+  const [selectedConso, setSelectedConso] = useState(null);
+  const [selectedDisciple, setSelectedDisciple] = useState(null);
+
+  const [showAssignPrompt, setShowAssignPrompt] = useState(false);
+
+  const { data: queryResult } = useSearchProfile(debouncedSearch);
+
+  const [searchBy, setSearchBy] = useState<"consolidator" | "disciple">(
+    "consolidator"
+  );
+
+  const handleSearchConsolidator = (e: any) => {
+    setQ(e?.target?.value);
+    setConsolidator(e?.target?.value);
+    setSearchBy("consolidator");
+  };
+
+  const handleSearchDisciple = (e: any) => {
+    setSearchBy("disciple");
+    setDisciple(e?.target?.value);
+    setQ(e?.target?.value);
+  };
+
+  const handleSelectConsolidator = (data: any) => {
+    setSelectedConso(data);
+    setConsolidator(`${data.first_name} ${data.last_name}`);
+    setQ("");
+  };
+
+  const handleSelectDisciple = (data: any) => {
+    setSelectedDisciple(data);
+    setDisciple(`${data.first_name} ${data.last_name}`);
+    setQ("");
+  };
+
+  const handleSubmit = () => {
+    document?.getElementById?.("consolidator-input")?.focus();
+    if (!selectedConso || !selectedDisciple) {
+      if (!selectedConso)
+        document?.getElementById?.("consolidator-input")?.focus?.();
+
+      if (!selectedDisciple)
+        document?.getElementById?.("disciple-input")?.focus?.();
+
+      return;
     }
 
-    if (searchPerson) {
-      queryObject[searchPerson?.key] = searchPerson?.value;
-    }
-
-    if (dateRange) {
-      queryObject.dateStart = dateRange.dateStart.utc().toISOString();
-      queryObject.dateEnd = dateRange.dateEnd.utc().toISOString();
-    }
-
-    const searchParams = new URLSearchParams();
-    Object.keys(queryObject).forEach((key) =>
-      searchParams.append(key, queryObject[key])
+    assignConsolidator(
+      {
+        disciple_id: (selectedDisciple as any).id,
+        consolidator_id: (selectedConso as any).id,
+      },
+      {
+        onSuccess() {
+          setShowAssignPrompt(false);
+          setSelectedConso(null);
+          setSelectedDisciple(null);
+          setConsolidator("");
+          setDisciple("");
+        },
+      }
     );
-
-    let q = searchParams.toString();
-
-    console.log(q, queryObject);
-
-    axios.get(`/api/consolidations?${q}`).then((res) => {
-      setConsolidations(res.data);
-    });
-  }, [lesson, searchPerson, dateRange, sortBy, order]);
-
-  const [consolidators, setConsolidators] = useState<Consolidators[] | null>(
-    null
-  );
-  const [disciplesSearch, setDisciplesSearch] = useState<Disciples[] | null>(
-    null
-  );
-  const [selectedDisciple, setSelectedDisciple] = useState<Disciples | null>(
-    null
-  );
-
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [isAddingDisciple, setIsAddingDisciple] = useState(false);
-
-  const onKeyPress = () => {
-    setDisciplesSearch(null);
   };
-
-  const onChange = debounce((e: any) => {
-    axios.get(`/api/disciples?q=${e.target.value}`).then((res) => {
-      setDisciplesSearch(res.data);
-    });
-  }, 1000);
-
-  const handleAddConsolidator = () => {
-    setIsAddingDisciple(true);
-    axios
-      .post("/api/consolidators", { disciples_id: selectedDisciple?.id })
-      .finally(() => {
-        setIsAddingDisciple(false);
-        axios.get("/api/consolidators").then((res) => {
-          setConsolidators(res.data);
-        });
-        setShowAddModal(false);
-      });
-  };
-
-  // todo: prevent double entry
 
   return (
     <>
@@ -155,9 +144,16 @@ export default function Consolidations() {
           href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css"
         />
       </Head>
-      <Layout activeRoute="conso">
-        <div className="flex flex-col gap-4 mb-7">
+      <Layout activeRoute="consolidations">
+        <div className="flex items-center gap-4 mb-7">
           <h1 className="text-4xl font-bold">Consolidations</h1>
+          <button
+            className="gap-1 flex text-sm items-center underline text-[#6474dc]"
+            onClick={() => setShowAssignPrompt(true)}
+          >
+            Assign
+            <RiLink size={16} />
+          </button>
         </div>
         <div className="flex gap-2">
           <input
@@ -165,32 +161,15 @@ export default function Consolidations() {
             placeholder="Search"
             className="px-3 py-2 border-2 rounded-lg text-sm w-full"
           />
-          <button className="flex items-center gap-2 shrink-0 py-2 px-7 rounded-lg text-xs border-2 border-[#6371de] text-[#6371de] font-bold">
+          {/* <button className="flex items-center gap-2 shrink-0 py-2 px-7 rounded-lg text-xs border-2 border-[#6371de] text-[#6371de] font-bold">
             <RxMixerHorizontal />
             <span>Clear Filter</span>
-          </button>
+          </button> */}
           <button className="flex items-center gap-2 shrink-0 py-2 px-7 rounded-lg text-xs border-2 border-[#6371de] text-[#6371de] font-bold">
-            <RxMixerHorizontal />
-            <span>Show Filter</span>
+            <span>Submit Search</span>
           </button>
         </div>
-        <div className="flex justify-between gap-4 mt-4">
-          <Lessons onSelect={(lesson) => setLesson(lesson)} />
-          <Person setSearchPerson={setSearchPerson} />
-          <DateRange
-            onChange={(dateStart, dateEnd) =>
-              setDateRange({ dateStart, dateEnd })
-            }
-          />
-          <div className="shrink-0">
-            <button className="gap-2 flex justify-center items-center bg-[#6474dc] hover:bg-[#4c55dc] text-xs font-extrabold text-white px-7 rounded-lg hover:shadow-md h-full">
-              <span className="text-lg">
-                <BiExport />
-              </span>
-              Export as CSV
-            </button>
-          </div>
-        </div>
+
         <table className="table-auto w-full text-sm mt-4">
           <thead>
             <tr className="bg-[#f4f7fa]">
@@ -238,7 +217,7 @@ export default function Consolidations() {
                     }
                   }}
                 >
-                  Date
+                  Recent Conso Date
                 </ColumnTitle>
               </td>
             </tr>
@@ -254,7 +233,7 @@ export default function Consolidations() {
                   }`}
                 >
                   <td className="py-2 rounded-l-lg"></td>
-                  <td className="py-2">{item.lesson_code.code}</td>
+                  <td className="py-2">{item?.lesson_code?.code ?? "-"}</td>
                   <td className="py-2">
                     {item.disciple_id.first_name ?? ""}{" "}
                     {item.disciple_id?.last_name ?? ""}
@@ -272,60 +251,113 @@ export default function Consolidations() {
           </tbody>
         </table>
       </Layout>
-      {showAddModal && (
+      {showAssignPrompt && (
         <div className="fixed top-0 w-screen h-screen bg-[#3c4151b3] z-10">
           <div className="flex w-full h-full justify-center items-center">
-            <div className="bg-white rounded-2xl w-[560px] relative p-7">
+            <div className="bg-white rounded-2xl w-[650px] relative p-7">
               <div className="absolute top-0 right-0 p-4 text-2xl text-gray-600">
-                <button onClick={() => setShowAddModal(false)}>
+                <button onClick={() => setShowAssignPrompt(false)}>
                   <RiCloseCircleFill />
                 </button>
               </div>
-              <header className="text-center font-bold text-2xl text-[#3c4151]">
-                Add Consolidator
+              <header className="font-bold text-2xl text-[#3c4151]">
+                Assign
               </header>
-              <div className="mt-4">
-                <input
-                  onKeyPress={onKeyPress}
-                  onChange={onChange}
-                  id="input-search-conso"
-                  placeholder="Search"
-                  className="w-full px-4 py-2 border-2 rounded-2xl mt-2"
-                />
-              </div>
-              {consolidators && (
-                <div className="max-h-[150px] overflow-y-auto flex flex-col py-2">
-                  {disciplesSearch?.map((item) => {
-                    return (
-                      <li
-                        key={item.id}
-                        onClick={() => {
-                          setSelectedDisciple(item);
-                          setDisciplesSearch(null);
-                          (
-                            document.getElementById(
-                              "input-search-conso"
-                            ) as HTMLInputElement
-                          ).value = `${item.first_name ?? ""} ${
-                            item?.last_name ?? ""
-                          }`;
-                        }}
-                        className="block py-2 hover:bg-[#f4f7fa] px-4 rounded-lg cursor-pointer"
-                      >
-                        {item.first_name} {item.last_name}
-                      </li>
-                    );
-                  })}
+              <div className="mt-4 flex items-center gap-4 pt-5">
+                <div className="relative grow">
+                  <label className="absolute top-[-20px]">Consolidator</label>
+                  <input
+                    disabled={isLoading}
+                    id="consolidator-input"
+                    onFocus={() => setSearchBy("consolidator")}
+                    value={consolidator}
+                    onChange={handleSearchConsolidator}
+                    placeholder="Type to search"
+                    className="w-full px-4 py-2 border-2 rounded-2xl mt-2"
+                  />
+                  {searchBy === "consolidator" && !!queryResult?.length && (
+                    <div className="w-full overflow-y-auto max-h-[175px] flex flex-col py-2 absolute bg-[#f4f7fa] mt-2 rounded-lg shadow-lg">
+                      {queryResult?.map((item) => {
+                        return (
+                          <li
+                            onClick={() => handleSelectConsolidator(item)}
+                            key={item.id}
+                            className="hover:bg-gray-200 flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer"
+                          >
+                            <div className="text-[#6474dc] text-lg bg-gray-200 h-9 w-9 rounded-full shrink-0 overflow-hidden border-2 border-[#6474dc] flex items-center justify-center">
+                              {item.img_url ? (
+                                <img
+                                  src={item.img_url}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <PiUserBold />
+                              )}
+                            </div>
+                            <span className="overflow-ellipsis whitespace-nowrap overflow-hidden">
+                              {item.first_name} {item.last_name}
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-              )}
+                <div className="text-gray-500 text-2xl mt-2">
+                  <RiArrowRightLine />
+                </div>
+                <div className="relative grow">
+                  <label className="absolute top-[-20px]">Disciple</label>
+                  <input
+                    disabled={isLoading}
+                    id="disciple-input"
+                    onFocus={() => setSearchBy("disciple")}
+                    value={disciple}
+                    onChange={handleSearchDisciple}
+                    placeholder="Type to search"
+                    className="w-full px-4 py-2 border-2 rounded-2xl mt-2"
+                  />
+                  {searchBy === "disciple" && !!queryResult?.length && (
+                    <div className="w-full overflow-y-auto max-h-[175px] flex flex-col py-2 absolute bg-[#f4f7fa] mt-2 rounded-lg shadow-lg">
+                      {queryResult
+                        ?.filter(
+                          (item) => item?.id !== (selectedConso as any)?.id
+                        )
+                        ?.map((item) => {
+                          return (
+                            <li
+                              onClick={() => handleSelectDisciple(item)}
+                              key={item.id}
+                              className="hover:bg-gray-200 flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer"
+                            >
+                              <div className="text-[#6474dc] text-lg bg-gray-200 h-9 w-9 rounded-full shrink-0 overflow-hidden border-2 border-[#6474dc] flex items-center justify-center">
+                                {item.img_url ? (
+                                  <img
+                                    src={item.img_url}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <PiUserBold />
+                                )}
+                              </div>
+                              <span className="overflow-ellipsis whitespace-nowrap overflow-hidden">
+                                {item.first_name} {item.last_name}
+                              </span>
+                            </li>
+                          );
+                        })}
+                    </div>
+                  )}
+                </div>
+              </div>
               <div className="mt-5">
                 <div className="flex gap-2">
                   <button
-                    onClick={handleAddConsolidator}
-                    disabled={!selectedDisciple || isAddingDisciple}
+                    disabled={isLoading}
+                    onClick={handleSubmit}
                     className="grow gap-2 flex justify-center disabled:bg-[#e0e9f1] bg-[#6474dc] hover:bg-[#4c55dc] text-xs font-extrabold text-white py-3 px-4 rounded-lg hover:shadow-md"
                   >
-                    Add as Consolidator
+                    Assign now
                   </button>
                 </div>
               </div>
@@ -657,5 +689,3 @@ function useOnClickOutside(ref: any, handler: (event: any) => any) {
     };
   }, [ref, handler]);
 }
-
-export const getServerSideProps = getServerSidePropsWithAuth();

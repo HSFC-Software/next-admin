@@ -1,5 +1,11 @@
-import { useMutation } from "react-query";
-import { newVip, NewVipPayload, signIn } from "./api";
+import { useMutation, useQueryClient } from "react-query";
+import {
+  assignConsolidator,
+  AssignConsolidatorType,
+  newVip,
+  NewVipPayload,
+  signIn,
+} from "./api";
 import { sendBulkSms } from "@/lib/api";
 
 export const useNewVip = () => {
@@ -24,4 +30,17 @@ export const useSendBulkSms = () => {
     unknown,
     { text: string; receivers: string[]; sender: string }
   >(({ text, receivers, sender }) => sendBulkSms(text, receivers, sender));
+};
+
+export const useAssignConsolidator = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation(
+    (payload: AssignConsolidatorType) => assignConsolidator(payload),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(["getConsolidators"]);
+      },
+    }
+  );
 };
