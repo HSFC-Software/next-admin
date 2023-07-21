@@ -223,7 +223,7 @@ export default function Consolidations() {
             </tr>
           </thead>
           <tbody>
-            {consolidations?.map((item, index) => {
+            {consolidations?.map((item: any, index: number) => {
               const isLast = consolidations.length - 1 === index;
               return (
                 <tr

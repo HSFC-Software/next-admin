@@ -72,7 +72,7 @@ export default function NetworkConsolidator() {
     axios
       .post("/api/consolidations", {
         lesson_code: "L1",
-        consolidator_id: selectedConsolidator?.disciples.id,
+        consolidator_id: (selectedConsolidator as any)?.disciples.id,
         disciple_id: selectedVip?.disciples.id,
       })
       .then(() => {
@@ -93,7 +93,7 @@ export default function NetworkConsolidator() {
   useEffect(() => {
     if (vips) {
       if (router?.query?.assignToNew) {
-        const vip = getRootProps<any>("consolidation.vip");
+        const vip: any = getRootProps("consolidation.vip");
         const selected = vip.selectedId ?? "";
         setSearchQ(vip?.consolidatorQ);
 
@@ -199,7 +199,7 @@ export default function NetworkConsolidator() {
                 !!_consolidators?.length &&
                 !selectedConsolidator && (
                   <div className="max-h-[150px] overflow-y-auto flex flex-col py-2">
-                    {_consolidators?.map((item) => {
+                    {_consolidators?.map((item: any) => {
                       return (
                         <li
                           key={item.id}
