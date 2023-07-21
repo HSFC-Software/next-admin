@@ -89,3 +89,12 @@ export const getDisciples = async (q: string) => {
     return Promise.reject(err);
   }
 };
+
+export const getProfileByEmail = async (email: string) => {
+  try {
+    const { data } = await edgeFunction.get("/profile", { params: { email } });
+    return data;
+  } catch (err) {
+    return Promise.reject(err);
+  }
+};

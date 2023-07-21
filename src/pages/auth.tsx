@@ -1,34 +1,36 @@
-import { GetServerSidePropsContext } from "next";
 import Head from "next/head";
-import { useEffect } from "react";
-import { useSignIn } from "@/lib/mutation";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { toast } from "react-toastify";
 import Script from "next/script";
 import Image from "next/image";
-import { setCookie } from "cookies-next";
+import { setCookie } from "nookies";
+import { useGetProfileFromToken } from "@/lib/queries";
 
 export default function Auth() {
-  const { mutate } = useSignIn();
+  const [token, setToken] = useState("");
+  const { data } = useGetProfileFromToken(token);
   const router = useRouter();
 
   useEffect(() => {
     const params = Object.fromEntries(new URLSearchParams(location.hash));
-    const access_token = params["#access_token"];
-
-    mutate(access_token, {
-      onSuccess: (res: any) => {
-        setCookie("token", res?.token, {
-          maxAge: 30 * 24 * 60 * 60, // 30 days
-        });
-        router.push("/");
-      },
-      onError: (res) => {
-        toast.error("Unauthorized Sign In. Please try again.");
-        router.push("sign-in");
-      },
+    setToken(params["#access_token"]);
+    setCookie(null, "token", params["#access_token"], {
+      expires: new Date(Date.now() + 60 * 60 * 1000),
     });
   }, []);
+
+  if (data) {
+    if (Boolean(router.query.next)) {
+      window.location.href = String(router.query.next);
+    } else {
+      window.location.href = "/";
+    }
+  }
+
+  if (data === null) {
+    // unauthorized
+    window.location.href = "/sign-in?user=unauthorized";
+  }
 
   return (
     <>

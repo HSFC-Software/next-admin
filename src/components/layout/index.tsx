@@ -4,27 +4,18 @@ import { RiHome5Line } from "react-icons/ri";
 import { BiNetworkChart } from "react-icons/bi";
 import { ReactNode } from "react";
 import Link from "next/link";
-import { deleteCookie } from "cookies-next";
-import { useRouter } from "next/router";
-import { supabase } from "@/lib/supabase";
 import { TbSend } from "react-icons/tb";
+import { destroyCookie } from "nookies";
 
 export default function Layout(props: {
   children: ReactNode;
   activeRoute?: string;
 }) {
-  const router = useRouter();
   const { children, activeRoute } = props;
 
   const handleSignOut = () => {
-    // remove cookie
-    deleteCookie("token");
-
-    // refresh page
-    router.reload();
-
-    supabase.auth.signOut();
-    // todo: send request to server to invalidate session.
+    destroyCookie(null, "token");
+    window.location.href = "/sign-in";
   };
 
   return (

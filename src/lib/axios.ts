@@ -1,5 +1,8 @@
 import api from "axios";
 
+/**
+ * @deprecated
+ */
 const axios = api.create({
   baseURL: "https://api.fishgen.org",
   timeout: 10000,
@@ -7,8 +10,8 @@ const axios = api.create({
 
 axios.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("access_token");
-    config.headers.Authorization = `Bearer ${token}`;
+    // const token = localStorage.getItem("access_token");
+    // config.headers.Authorization = `Bearer ${token}`;
     return config;
   },
   (error) => {

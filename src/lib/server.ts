@@ -11,23 +11,39 @@ export function getServerSidePropsWithAuth(
       getServerSidePropsFuncResult = (await getServerSidePropsFunc(ctx)) || {};
     }
 
-    const token = ctx.req.cookies?.token;
-    const decoded = jwt.decode(token ?? "");
+    const token = ctx.req.headers.cookie?.split("=")[1];
 
-    if (!decoded) {
-      //
+    // todo: validate token in api
+    // check if token is valid
+
+    if (token) {
       return {
-        redirect: {
-          destination: "/sign-in",
-          permanent: false,
+        ...getServerSidePropsFuncResult,
+        props: {
+          token: token ?? null,
         },
       };
     }
 
+    let protocol = "http";
+
+    if (process.env.NODE_ENV === "production") {
+      protocol += "s";
+    }
+
+    const baseUrl = protocol + "://" + ctx.req.headers.host;
+    let redirect_uri = `${baseUrl}/auth`;
+
+    if (ctx.query.redirect_uri) {
+      redirect_uri += "?next=" + ctx.query.redirect_uri;
+    }
+
+    let destination = `https://sso.fishgen.org?client_id=disciplr&response_type=token&redirect_uri=${redirect_uri}&scope=openid%20profile%20email&state=disciplr`;
+
     return {
-      ...getServerSidePropsFuncResult,
-      props: {
-        token: token ?? null,
+      redirect: {
+        destination: destination,
+        permanent: true,
       },
     };
   };
