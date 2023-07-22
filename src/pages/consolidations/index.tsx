@@ -13,6 +13,7 @@ import "daterangepicker";
 import { useGetConsolidators, useSearchProfile } from "@/lib/queries";
 import { useDebounce } from "@/lib/hooks";
 import { useAssignConsolidator } from "@/lib/mutation";
+import { useRouter } from "next/router";
 
 type Disciples = {
   id: string;
@@ -51,6 +52,8 @@ type Consolidations = {
 type Order = "asc" | "desc";
 
 export default function Consolidations() {
+  const router = useRouter();
+
   const { data: consolidations } = useGetConsolidators();
   const { mutate: assignConsolidator, isLoading } = useAssignConsolidator();
 
@@ -126,6 +129,25 @@ export default function Consolidations() {
     );
   };
 
+  useEffect(() => {
+    if (router.query?.assignTo) {
+      const name = String(router.query.name).trim();
+      setDisciple(name);
+      setSelectedDisciple({
+        id: router.query.assignTo,
+      } as any);
+      setShowAssignPrompt(true);
+    }
+  }, []);
+
+  const handleCloseAssignPrompt = () => {
+    if (router.query?.assignTo) {
+      router.push("/vips");
+    }
+
+    setShowAssignPrompt(false);
+  };
+
   return (
     <>
       <Head>
@@ -161,10 +183,6 @@ export default function Consolidations() {
             placeholder="Search"
             className="px-3 py-2 border-2 rounded-lg text-sm w-full"
           />
-          {/* <button className="flex items-center gap-2 shrink-0 py-2 px-7 rounded-lg text-xs border-2 border-[#6371de] text-[#6371de] font-bold">
-            <RxMixerHorizontal />
-            <span>Clear Filter</span>
-          </button> */}
           <button className="flex items-center gap-2 shrink-0 py-2 px-7 rounded-lg text-xs border-2 border-[#6371de] text-[#6371de] font-bold">
             <span>Submit Search</span>
           </button>
@@ -256,7 +274,7 @@ export default function Consolidations() {
           <div className="flex w-full h-full justify-center items-center">
             <div className="bg-white rounded-2xl w-[650px] relative p-7">
               <div className="absolute top-0 right-0 p-4 text-2xl text-gray-600">
-                <button onClick={() => setShowAssignPrompt(false)}>
+                <button onClick={handleCloseAssignPrompt}>
                   <RiCloseCircleFill />
                 </button>
               </div>
