@@ -40,6 +40,7 @@ export const useAssignConsolidator = () => {
     {
       onSuccess: () => {
         queryClient.invalidateQueries(["getConsolidators"]);
+        queryClient.invalidateQueries(["getVips", { status: "PENDING" }]);
       },
     }
   );
