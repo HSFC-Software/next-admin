@@ -4,6 +4,7 @@ import {
   getConsolidators,
   getDisciples,
   getProfileByEmail,
+  getRecentConsolidation,
   getVips,
   searchProfile,
 } from "./api";
@@ -16,11 +17,15 @@ export const useGetVips = (status?: "ASSIGNED" | "PENDING") => {
   });
 };
 
-export const useGetConsolidators = () => {
-  return useQuery(["getConsolidators"], async () => await getConsolidators(), {
-    staleTime: 1000 * 60 * 5,
-    enabled: true,
-  });
+export const useGetConsolidators = (q: string) => {
+  return useQuery(
+    ["getConsolidators", { q }],
+    async () => await getConsolidators(q),
+    {
+      staleTime: 1000 * 60 * 5,
+      enabled: true,
+    }
+  );
 };
 
 export const useGetDisciples = (q: string) => {
@@ -66,6 +71,17 @@ export const useSearchProfile = (keyword: string) => {
   return useQuery(
     ["searchProfile", { id: keyword }],
     async () => await searchProfile(keyword),
+    {
+      staleTime: 1000 * 60 * 5,
+      enabled: true,
+    }
+  );
+};
+
+export const useGetRecentConsolidation = (id: string) => {
+  return useQuery(
+    ["getRecentConsolidation", { id }],
+    async () => await getRecentConsolidation(id),
     {
       staleTime: 1000 * 60 * 5,
       enabled: true,

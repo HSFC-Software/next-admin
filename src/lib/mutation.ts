@@ -5,6 +5,8 @@ import {
   newVip,
   NewVipPayload,
   signIn,
+  updateConsolidator,
+  UpdateConsolidatorPayload,
 } from "./api";
 import { sendBulkSms } from "@/lib/api";
 
@@ -39,8 +41,21 @@ export const useAssignConsolidator = () => {
     (payload: AssignConsolidatorType) => assignConsolidator(payload),
     {
       onSuccess: () => {
-        queryClient.invalidateQueries(["getConsolidators"]);
+        queryClient.invalidateQueries(["getConsolidators", { q: "" }]);
         queryClient.invalidateQueries(["getVips", { status: "PENDING" }]);
+      },
+    }
+  );
+};
+
+export const useUpdateConsolidator = (id: string, q?: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation(
+    (payload: UpdateConsolidatorPayload) => updateConsolidator(id, payload),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(["getConsolidators", { q }]);
       },
     }
   );

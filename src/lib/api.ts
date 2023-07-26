@@ -72,9 +72,9 @@ export const getVips = async (status?: "ASSIGNED" | "PENDING") => {
   return response.data;
 };
 
-export const getConsolidators = async () => {
+export const getConsolidators = async (q: string) => {
   try {
-    const { data } = await edgeFunction.get(`/v2/consolidators`);
+    const { data } = await edgeFunction.get(`/v2/consolidators?q=${q}`);
     return data;
   } catch (err) {
     return Promise.reject(err);
@@ -142,6 +142,44 @@ export const assignConsolidator = async (payload: AssignConsolidatorType) => {
   try {
     const { data } = await edgeFunction.post(`/v2/consolidators`, payload);
     return data;
+  } catch (err) {
+    return Promise.reject(err);
+  }
+};
+
+export type UpdateConsolidatorPayload = {
+  consolidator_id: string;
+};
+
+export const updateConsolidator = async (
+  id: string,
+  payload: UpdateConsolidatorPayload
+) => {
+  try {
+    const { data } = await edgeFunction.patch(
+      `/v2/consolidators/${id}`,
+      payload
+    );
+    return data;
+  } catch (err) {
+    return Promise.reject(err);
+  }
+};
+
+export type RecentResponse = {
+  created_at: string;
+  id: string;
+  lesson_code: {
+    name: string;
+    code: string;
+  };
+  status: string;
+};
+
+export const getRecentConsolidation = async (id: string) => {
+  try {
+    const { data } = await edgeFunction.get(`/v2/consolidators/recent/${id}`);
+    return data as RecentResponse;
   } catch (err) {
     return Promise.reject(err);
   }
