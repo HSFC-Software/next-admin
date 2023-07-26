@@ -9,6 +9,9 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@emotion/react": "^11.11.1",
+    "@emotion/styled": "^11.11.0",
+    "@mui/material": "^5.14.2",
     "@next/font": "13.1.5",
     "@supabase/supabase-js": "^2.22.0",
     "@tanstack/react-query": "^4.29.7",

@@ -1,15 +1,11 @@
 import Layout from "@/components/layout";
-import axios from "@/lib/axios";
 import Head from "next/head";
 import { useEffect, useRef, useState } from "react";
 import { RiCloseCircleFill, RiArrowRightLine, RiLink } from "react-icons/ri";
 import { PiUserBold } from "react-icons/pi";
-
-import debounce from "lodash.debounce";
-import moment, { Moment } from "moment";
+import { Skeleton } from "@mui/material";
+import moment from "moment";
 import { IoCaretUpOutline, IoCaretDownOutline } from "react-icons/io5";
-import $ from "jquery";
-import "daterangepicker";
 import {
   useGetConsolidators,
   useGetRecentConsolidation,
@@ -62,7 +58,8 @@ export default function Consolidations() {
 
   const [searchQ, setSearchQ] = useState("");
   const debouncedSearchQ = useDebounce(searchQ, 500);
-  const { data: consolidations } = useGetConsolidators(debouncedSearchQ ?? "");
+  const { data: consolidations, isLoading: isFetchingList } =
+    useGetConsolidators(debouncedSearchQ ?? "");
 
   const [order, setOrder] = useState<Order>("desc");
   const [sortBy, setSortBy] = useState("created_at");
@@ -298,6 +295,7 @@ export default function Consolidations() {
             </tr>
           </thead>
           <tbody>
+            {isFetchingList && <Preloader />}
             {consolidations?.map((item: Consolidations, index: number) => {
               const isLast = consolidations.length - 1 === index;
               return (
@@ -355,6 +353,11 @@ export default function Consolidations() {
             })}
           </tbody>
         </table>
+        {!isFetchingList && !consolidations?.length && (
+          <div className="px-3 py-5 text-gray-500">
+            No result found for search: <strong>{`"${searchQ}"`}</strong>
+          </div>
+        )}
       </Layout>
       {showAssignPrompt && (
         <div className="fixed top-0 w-screen h-screen bg-[#3c4151b3] z-10">
@@ -610,18 +613,85 @@ type LessonProps = {
 };
 
 function Lesson(props: LessonProps) {
-  const { data } = useGetRecentConsolidation(props.id);
+  const { data, isLoading } = useGetRecentConsolidation(props.id);
+
+  if (isLoading)
+    return (
+      <td className="py-2 ">
+        <div className="flex gap-2">
+          <Skeleton style={{ height: 10, width: 50 }} variant="rounded" />
+          <Skeleton style={{ height: 10, width: 30 }} variant="rounded" />
+        </div>
+      </td>
+    );
 
   return <td className="py-2">{data?.lesson_code?.name ?? "-"}</td>;
 }
 
 function RecentDate(props: LessonProps) {
-  const { data } = useGetRecentConsolidation(props.id);
+  const { data, isLoading } = useGetRecentConsolidation(props.id);
+
+  if (isLoading)
+    return (
+      <td className="py-2 ">
+        <div className="flex gap-2">
+          <Skeleton style={{ height: 10, width: 75 }} variant="rounded" />
+          <Skeleton style={{ height: 10, width: 30 }} variant="rounded" />
+          <Skeleton style={{ height: 10, width: 20 }} variant="rounded" />
+        </div>
+      </td>
+    );
 
   return (
     <td className="py-2 rounded-r-lg">
       {data?.created_at && <>{moment(data?.created_at).format("LLL")}</>}
       {!data?.created_at && "-"}
     </td>
+  );
+}
+
+function PreloaderRow() {
+  return (
+    <tr
+      className={`cursor-pointer hover:border-[transparent] hover:bg-[#f4f7fa] `}
+    >
+      <td className="py-4 rounded-l-lg"></td>
+      <td className="py-4 ">
+        <div className="flex gap-2">
+          <Skeleton style={{ height: 10, width: 50 }} variant="rounded" />
+          <Skeleton style={{ height: 10, width: 30 }} variant="rounded" />
+        </div>
+      </td>
+      <td className="py-4">
+        <div className="flex gap-2">
+          <Skeleton style={{ height: 10, width: 75 }} variant="rounded" />
+          <Skeleton style={{ height: 10, width: 36 }} variant="rounded" />
+        </div>
+      </td>
+      <td className="py-4">
+        <div className="flex gap-2">
+          <Skeleton style={{ height: 10, width: 36 }} variant="rounded" />
+          <Skeleton style={{ height: 10, width: 75 }} variant="rounded" />
+        </div>
+      </td>
+      <td className="py-4 ">
+        <div className="flex gap-2">
+          <Skeleton style={{ height: 10, width: 75 }} variant="rounded" />
+          <Skeleton style={{ height: 10, width: 30 }} variant="rounded" />
+          <Skeleton style={{ height: 10, width: 20 }} variant="rounded" />
+        </div>
+      </td>
+    </tr>
+  );
+}
+
+function Preloader() {
+  return (
+    <>
+      <PreloaderRow />
+      <PreloaderRow />
+      <PreloaderRow />
+      <PreloaderRow />
+    </>
   );
 }
