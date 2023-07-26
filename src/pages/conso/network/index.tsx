@@ -39,7 +39,7 @@ export default function NetworkConsolidator() {
 
   const { data: disciplesSearch, isLoading: isSearching } =
     useGetDisciples(debouncedSearch);
-  const { data: consolidators } = useGetConsolidators();
+  const { data: consolidators } = useGetConsolidators("");
 
   const filteredDisciples = disciplesSearch?.filter((item: any) => {
     const id = item.id;

@@ -43,7 +43,7 @@ export default function NetworkConsolidator() {
   const [showCreateVipModal, setShowCreateVipModal] = useState(false);
   const [searchQ, setSearchQ] = useState("");
   const { data: _vips, refetch: getVip } = useGetVips("PENDING");
-  const { data: consolidators } = useGetConsolidators();
+  const { data: consolidators } = useGetConsolidators("");
 
   const vips = _vips || [];
 
