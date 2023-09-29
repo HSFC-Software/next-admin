@@ -5,6 +5,7 @@ import {
   newVip,
   NewVipPayload,
   signIn,
+  updateApplication,
   updateConsolidator,
   UpdateConsolidatorPayload,
 } from "./api";
@@ -58,5 +59,19 @@ export const useUpdateConsolidator = (id: string, q?: string) => {
         queryClient.invalidateQueries(["getConsolidators", { q }]);
       },
     }
+  );
+};
+
+export type UpdateApplicationPayload = {
+  id: string;
+  status: "APPROVED" | "REJECTED";
+  student_id?: string;
+};
+
+export const useUpdateApplication = () => {
+  const queryClient = useQueryClient();
+  return useMutation(
+    (payload: UpdateApplicationPayload) => updateApplication(payload),
+    { onSuccess: () => queryClient.invalidateQueries(["getApplicationList"]) }
   );
 };

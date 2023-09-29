@@ -7,9 +7,10 @@ import {
   getRecentConsolidation,
   getVips,
   searchProfile,
+  getApplicationList,
+  getCourses,
 } from "./api";
 import jwt from "jsonwebtoken";
-
 export const useGetVips = (status?: "ASSIGNED" | "PENDING") => {
   return useQuery(["getVips", { status }], async () => await getVips(status), {
     staleTime: 1000 * 60 * 5,
@@ -88,3 +89,15 @@ export const useGetRecentConsolidation = (id: string) => {
     }
   );
 };
+
+export const useGetApplicationList = () =>
+  useQuery(["getApplicationList"], async () => await getApplicationList(), {
+    staleTime: 1000 * 60 * 5,
+    enabled: true,
+  });
+
+export const useGetCourses = () =>
+  useQuery(["getCourses"], async () => await getCourses(), {
+    staleTime: 1000 * 60 * 5,
+    enabled: true,
+  });

@@ -1,5 +1,6 @@
 import { edgeFunction } from "./axios";
 import request from "axios";
+import { supabase } from "@/lib/supabase";
 
 export type NewVipPayload = {
   first_name: string;
@@ -183,4 +184,69 @@ export const getRecentConsolidation = async (id: string) => {
   } catch (err) {
     return Promise.reject(err);
   }
+};
+
+export type ApplicationType = {
+  birthday: string;
+  cell_leader_name: string;
+  contact_number: string;
+  course_id: string;
+  created_at: string;
+  first_name: string;
+  id: string;
+  last_name: string;
+  lesson_completed: string;
+  middle_name: string;
+  network_leader_name: string;
+  ojt: string;
+  reference: string;
+  role: string;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  want_to_be_admin_or_teacher: boolean;
+  with_cellgroup: boolean;
+};
+
+export const getApplicationList = async () => {
+  const { data, error } = await supabase //
+    .from("school_registrations")
+    .select("*, course_id")
+    .eq("status", "PENDING");
+
+  if (error) return Promise.reject(error);
+  return data as ApplicationType[];
+};
+
+export const getCourses = async () => {
+  const { data, error } = await supabase
+    .from("courses")
+    .select("id, title, fee");
+
+  if (error) return Promise.reject(error);
+  return data;
+};
+
+export const updateApplication = async (payload: {
+  id: string;
+  status: "APPROVED" | "REJECTED";
+  student_id?: string;
+}) => {
+  const id = payload.id;
+
+  const body: Partial<typeof payload> = {
+    status: payload.status,
+  };
+
+  if (payload.student_id) body.student_id = payload.student_id;
+
+  const { data, error } = await supabase
+    .from("school_registrations")
+    .update(body)
+    .eq("id", id)
+    .select(
+      "id, course_id, first_name, status, reference, middle_name, last_name, contact_number, cell_leader_name, network_leader_name, lesson_completed, ojt, with_cellgroup, want_to_be_admin_or_teacher, role, birthday"
+    )
+    .single();
+
+  if (error) return Promise.reject(error);
+  return data as any;
 };

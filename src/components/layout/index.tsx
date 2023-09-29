@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { AiOutlineFire, AiOutlineUsergroupAdd } from "react-icons/ai";
 import { RiHome5Line } from "react-icons/ri";
-import { BiNetworkChart } from "react-icons/bi";
+import { BiNetworkChart, BiSolidBookContent } from "react-icons/bi";
 import { ReactNode } from "react";
 import Link from "next/link";
 import { TbSend } from "react-icons/tb";
@@ -49,9 +49,7 @@ export default function Layout(props: {
                     activeRoute === "home" ? "font-extrabold bg-[#e0e9f1]" : ""
                   }`}
                 >
-                  <span className="w-[35px] text-xl opacity-[.8]">
-                    <RiHome5Line />
-                  </span>
+                  <span className="w-[35px] text-xl opacity-[.8]">🏡</span>
                   <div>Home</div>
                 </li>
               </Link>
@@ -63,9 +61,7 @@ export default function Layout(props: {
                       : ""
                   }`}
                 >
-                  <span className="w-[35px] text-xl opacity-[.8]">
-                    <AiOutlineFire />
-                  </span>
+                  <span className="w-[35px] text-xl opacity-[.8]">🔥</span>
                   <div>Consolidation</div>
                 </li>
               </Link>
@@ -75,9 +71,7 @@ export default function Layout(props: {
                     activeRoute === "vips" ? "font-extrabold bg-[#e0e9f1]" : ""
                   }`}
                 >
-                  <span className="w-[35px] text-xl opacity-[.8]">
-                    <RiVipCrown2Line />
-                  </span>
+                  <span className="w-[35px] text-xl opacity-[.8]">👑</span>
                   <div>VIPs</div>
                 </li>
               </Link>
@@ -89,10 +83,20 @@ export default function Layout(props: {
                       : ""
                   }`}
                 >
-                  <span className="w-[35px] text-xl opacity-[.8]">
-                    <BiNetworkChart />
-                  </span>
+                  <span className="w-[35px] text-xl opacity-[.8]">🏆</span>
                   <div>Network</div>
+                </li>
+              </Link>
+              <Link href="/school">
+                <li
+                  className={`flex items-center cursor-pointer hover:bg-[#e0e9f1] py-3 px-4 rounded-lg text-sm text-[#3c4151] ${
+                    activeRoute === "school"
+                      ? "font-extrabold bg-[#e0e9f1]"
+                      : ""
+                  }`}
+                >
+                  <span className="w-[35px] text-xl opacity-[.8]">📚</span>
+                  <div>School</div>
                 </li>
               </Link>
               <Link href="/sms">
@@ -101,9 +105,7 @@ export default function Layout(props: {
                     activeRoute === "sms" ? "font-extrabold bg-[#e0e9f1]" : ""
                   }`}
                 >
-                  <span className="w-[35px] text-xl opacity-[.8]">
-                    <TbSend />
-                  </span>
+                  <span className="w-[35px] text-xl opacity-[.8]">📲</span>
                   <div>SMS Text Blast</div>
                 </li>
               </Link>
