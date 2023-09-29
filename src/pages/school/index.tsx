@@ -50,7 +50,7 @@ export default function School() {
             </li>
             <li className="mr-2">
               <a
-                href="#"
+                href="/school/accounting"
                 className="inline-flex gap-2 items-center justify-center p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300 group"
               >
                 <span className="text-xl">📑</span> Accounting
@@ -79,6 +79,7 @@ function Admission() {
     mutate: updateApplication,
     isLoading: isUpdating,
     isSuccess,
+    reset,
   } = useUpdateApplication();
 
   type CourseTable = {
@@ -152,9 +153,10 @@ function Admission() {
     if (isSuccess) {
       setTimeout(() => {
         setSelected(null);
+        reset();
       }, 1000);
     }
-  }, [isSuccess]);
+  }, [isSuccess, reset]);
 
   return (
     <>

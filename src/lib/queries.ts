@@ -9,6 +9,7 @@ import {
   searchProfile,
   getApplicationList,
   getCourses,
+  getSchoolRegistrationByReference,
 } from "./api";
 import jwt from "jsonwebtoken";
 export const useGetVips = (status?: "ASSIGNED" | "PENDING") => {
@@ -101,3 +102,13 @@ export const useGetCourses = () =>
     staleTime: 1000 * 60 * 5,
     enabled: true,
   });
+
+export const useGetSchoolRegistrationByReference = (reference: string) =>
+  useQuery(
+    ["getSchoolRegistrationByReference", { reference }],
+    async () => await getSchoolRegistrationByReference(reference),
+    {
+      staleTime: 1000 * 60 * 5,
+      enabled: true,
+    }
+  );

@@ -250,3 +250,33 @@ export const updateApplication = async (payload: {
   if (error) return Promise.reject(error);
   return data as any;
 };
+
+export const getSchoolRegistrationByReference = async (reference: string) => {
+  const { data, error } = await supabase
+    .from("school_registrations")
+    .select(
+      "id, course_id, first_name, status, reference, middle_name, last_name, contact_number, cell_leader_name, network_leader_name, lesson_completed, ojt, with_cellgroup, want_to_be_admin_or_teacher, role, birthday"
+    )
+    .eq("reference", reference)
+    .eq("status", "APPROVED")
+    .single();
+
+  if (error) return Promise.reject(error);
+  return data;
+};
+
+export const enrollStudent = async (registration_id: string) => {
+  const { data, error } = await supabase
+    .from("school_registrations")
+    .update({ status: "ENROLLED" })
+    .eq("id", registration_id)
+    .select(
+      "id, course_id, first_name, status, reference, middle_name, last_name, contact_number, cell_leader_name, network_leader_name, lesson_completed, ojt, with_cellgroup, want_to_be_admin_or_teacher, role, birthday"
+    )
+    .single();
+
+  // todo: handle add student to the batch master list
+
+  if (error) return Promise.reject(error);
+  return data;
+};
