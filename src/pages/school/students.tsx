@@ -15,6 +15,8 @@ import { Tabs } from ".";
 import { RiFileCopyLine } from "react-icons/ri";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer, toast } from "react-toastify";
+import { supabase } from "@/lib/supabase";
+import { useQueryClient } from "react-query";
 
 export default function School() {
   return (
@@ -44,6 +46,23 @@ export default function School() {
 
 function Admission() {
   const { data } = useGetStudentList();
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const listener = supabase
+      .channel("table-db-changes")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "students" },
+        () => queryClient.invalidateQueries(["getStudentList"])
+      )
+      .subscribe();
+
+    return () => {
+      listener.unsubscribe();
+    };
+  }, []);
+
   const { data: courses } = useGetCourses();
   const {
     mutate: updateApplication,

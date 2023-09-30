@@ -17,6 +17,8 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useOnClickOutside } from "usehooks-ts";
 import Swal from "sweetalert2";
+import { supabase } from "@/lib/supabase";
+import { useQueryClient } from "react-query";
 
 export default function School() {
   return (
@@ -211,6 +213,23 @@ function Admission() {
       }, 250);
     }
   }, [isSuccess, reset]);
+
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const listener = supabase
+      .channel("table-db-changes")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "school_registrations" },
+        () => queryClient.invalidateQueries(["getApplicationList"])
+      )
+      .subscribe();
+
+    return () => {
+      listener.unsubscribe();
+    };
+  }, []);
 
   return (
     <>

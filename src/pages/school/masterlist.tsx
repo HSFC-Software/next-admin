@@ -17,6 +17,8 @@ import { useEffect, useRef, useState } from "react";
 import { useOnClickOutside } from "usehooks-ts";
 import Swal from "sweetalert2";
 import { Tabs } from ".";
+import { supabase } from "@/lib/supabase";
+import { useQueryClient } from "react-query";
 
 export default function School() {
   return (
@@ -45,6 +47,22 @@ export default function School() {
 
 function Admission() {
   const { data: students } = useGetStudentsByBatch();
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const listener = supabase
+      .channel("table-db-changes")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "school_masterlist" },
+        () => queryClient.invalidateQueries(["getStudentsByBatch"])
+      )
+      .subscribe();
+
+    return () => {
+      listener.unsubscribe();
+    };
+  }, []);
 
   const { data } = useGetStudentList();
   const { data: courses } = useGetCourses();

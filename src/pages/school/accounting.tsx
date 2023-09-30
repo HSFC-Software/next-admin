@@ -6,15 +6,33 @@ import {
 } from "@/lib/api";
 import { useGetCourses, useGetEnrollmentTransactions } from "@/lib/queries";
 import Head from "next/head";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Tabs } from ".";
 import Swal from "sweetalert2";
 import moment from "moment";
 import { useQueryClient } from "react-query";
+import { supabase } from "@/lib/supabase";
 
 export default function School() {
   const [showEnrollment, setShowEnrollment] = useState(false);
   const { data: transactions } = useGetEnrollmentTransactions();
+
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const listener = supabase
+      .channel("table-db-changes")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "enrollment_transactions" },
+        () => queryClient.invalidateQueries(["getEnrollmentTransactions"])
+      )
+      .subscribe();
+
+    return () => {
+      listener.unsubscribe();
+    };
+  }, []);
 
   return (
     <>
