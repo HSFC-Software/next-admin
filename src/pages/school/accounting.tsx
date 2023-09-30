@@ -99,7 +99,7 @@ export default function School() {
 
 function Enrollment() {
   const { data: courses } = useGetCourses();
-  const [registration, setRegistration] = useState<LinkpplicationType | null>(
+  const [registration, setRegistration] = useState<ApplicationType | null>(
     null
   );
 
@@ -160,6 +160,10 @@ function Enrollment() {
   return (
     <div className="fixed top-0 left-0 h-screen w-screen bg-[#0000004d] flex items-center justify-center">
       <div className="p-7 bg-white rounded-2xl relative w-[595px]">
+        <button className="absolute right-0 top-0 p-7 text-xs text-[#6474dc]">
+          Close
+        </button>
+
         {!registration ? (
           <header className="text-xl font-medium mb-4">Enroll</header>
         ) : (
