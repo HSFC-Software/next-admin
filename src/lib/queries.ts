@@ -13,6 +13,7 @@ import {
   getStudentList,
   getBatchList,
   getStudentsByBatch,
+  getEnrollmentTransactions,
 } from "./api";
 import jwt from "jsonwebtoken";
 export const useGetVips = (status?: "ASSIGNED" | "PENDING") => {
@@ -140,6 +141,19 @@ export const useGetStudentsByBatch = () => {
     ["getStudentsByBatch"],
     async () => {
       return await getStudentsByBatch({});
+    },
+    {
+      staleTime: 1000 * 60 * 5,
+      enabled: true,
+    }
+  );
+};
+
+export const useGetEnrollmentTransactions = () => {
+  return useQuery(
+    ["getEnrollmentTransactions"],
+    async () => {
+      return await getEnrollmentTransactions();
     },
     {
       staleTime: 1000 * 60 * 5,

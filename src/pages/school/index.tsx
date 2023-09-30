@@ -451,10 +451,10 @@ type TabProps = {
 
 export function Tabs(props: TabProps) {
   return (
-    <ul className="flex flex-wrap -mb-px text-sm font-medium text-center text-gray-500 dark:text-gray-400">
+    <ul className="flex gap-8 flex-wrap -mb-px text-sm font-medium text-center text-gray-500 dark:text-gray-400">
       {routeterTable.map((route) => {
         let linkStyles =
-          "inline-flex gap-2 items-center justify-center p-4 border-b-2 border-transparent rounded-t-lg group";
+          "inline-flex gap-2 items-center justify-center py-4 border-b-2 border-transparent rounded-t-lg group";
 
         if (props.activeTabKey === route.key) {
           linkStyles +=

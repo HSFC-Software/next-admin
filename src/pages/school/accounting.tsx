@@ -4,14 +4,17 @@ import {
   enrollStudent,
   getSchoolRegistrationByReference,
 } from "@/lib/api";
-import { useGetCourses } from "@/lib/queries";
+import { useGetCourses, useGetEnrollmentTransactions } from "@/lib/queries";
 import Head from "next/head";
 import { useState } from "react";
 import { Tabs } from ".";
 import Swal from "sweetalert2";
+import moment from "moment";
+import { useQueryClient } from "react-query";
 
 export default function School() {
   const [showEnrollment, setShowEnrollment] = useState(false);
+  const { data: transactions } = useGetEnrollmentTransactions();
 
   return (
     <>
@@ -43,6 +46,53 @@ export default function School() {
             <Enrollment onClose={() => setShowEnrollment(false)} />
           )}
         </div>
+        <table className="table-auto w-full mt-4 text-sm">
+          <thead>
+            <tr className="bg-[#f4f7fa]">
+              <td className="py-2 pl-2 font-bold text-[#6d8297] rounded-l-xl"></td>
+              <td className="py-2 font-bold text-[#6d8297]">Course</td>
+              <td className="py-2 font-bold text-[#6d8297]">Batch</td>
+              <td className="py-2 font-bold text-[#6d8297]">Student</td>
+              <td className="py-2 font-bold text-[#6d8297]">Amount</td>
+              <td className="py-2 font-bold text-[#6d8297]">
+                Transaction Date
+              </td>
+              <td className="py-2 pl-2 rounded-r-xl"></td>
+            </tr>
+          </thead>
+          <tbody>
+            {transactions?.map((item: any, index) => {
+              const isLast = index === transactions.length - 1;
+              return (
+                <tr
+                  key={item.id}
+                  className={`cursor-pointer hover:border-[transparent] hover:bg-[#f4f7fa] border-0 ${
+                    isLast ? "border-0" : "border-b"
+                  }`}
+                >
+                  <td className="py-2 pl-2 rounded-l-xl"></td>
+                  <td className="py-2">
+                    {item.school_registration_id.courses.title}
+                  </td>
+                  <td className="py-2">
+                    {item.school_registration_id.school_batch.name}
+                  </td>
+                  <td className="py-2">
+                    {item.school_registration_id.first_name}{" "}
+                    {item.school_registration_id.last_name}
+                  </td>
+                  <td className="py-2">
+                    Php {Number(item.transactions.amount || 0).toFixed(2)}
+                  </td>
+                  <td className="py-2">
+                    {moment(item.created_at).format("MMM DD, YY hh:mm A")}
+                  </td>
+                  <td className="py-2 pl-2 rounded-r-xl " />
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </Layout>
     </>
   );
@@ -52,6 +102,8 @@ type EnrollmentProps = {
   onClose: () => void;
 };
 function Enrollment(props: EnrollmentProps) {
+  const queryClient = useQueryClient();
+
   const { data: courses } = useGetCourses();
   const [registration, setRegistration] = useState<ApplicationType | null>(
     null
@@ -111,6 +163,7 @@ function Enrollment(props: EnrollmentProps) {
           confirmButtonText: "Close",
         }).then(async (result) => {
           props.onClose();
+          queryClient.invalidateQueries(["getEnrollmentTransactions"]);
         });
       })
       .finally(() => {

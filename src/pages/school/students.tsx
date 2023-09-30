@@ -6,17 +6,15 @@ import {
   hasDuplicateStudentRecord,
 } from "@/lib/api";
 import { UpdateApplicationPayload, useUpdateApplication } from "@/lib/mutation";
-import {
-  useGetApplicationList,
-  useGetCourses,
-  useGetStudentList,
-} from "@/lib/queries";
-import moment from "moment";
+import { useGetCourses, useGetStudentList } from "@/lib/queries";
 import Head from "next/head";
 import { useEffect, useRef, useState } from "react";
 import { useOnClickOutside } from "usehooks-ts";
 import Swal from "sweetalert2";
 import { Tabs } from ".";
+import { RiFileCopyLine } from "react-icons/ri";
+import "react-toastify/dist/ReactToastify.css";
+import { ToastContainer, toast } from "react-toastify";
 
 export default function School() {
   return (
@@ -39,6 +37,7 @@ export default function School() {
           <Admission />
         </div>
       </Layout>
+      <ToastContainer />
     </>
   );
 }
@@ -213,7 +212,24 @@ function Admission() {
                 }`}
               >
                 <td className="py-2 pl-2 rounded-l-xl"></td>
-                <td className="py-2">{item.learner_id}</td>
+                <td className="py-2">
+                  <div className="flex gap-1 items-center">
+                    <button
+                      onClick={async () => {
+                        await navigator.clipboard.writeText(item.learner_id);
+                        toast("Learner ID copied!", {
+                          autoClose: 1500,
+                          position: "bottom-right",
+                          progressClassName: "bg-[#6474dc]",
+                        });
+                      }}
+                      className="text-xl text-[#6474dc] cursor-pointer"
+                    >
+                      <RiFileCopyLine />
+                    </button>
+                    <span>{item.learner_id}</span>
+                  </div>
+                </td>
                 <td className="py-2">{item.first_name}</td>
                 <td className="py-2">{item.middle_name}</td>
                 <td className="py-2">{item.last_name}</td>

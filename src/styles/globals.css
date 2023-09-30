@@ -97,3 +97,7 @@ button:active .presentation {
 .daterangepicker td.in-range {
   background-color: #ebedff;
 }
+
+.Toastify__progress-bar {
+  background: #6474dc !important;
+}

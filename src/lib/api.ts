@@ -288,6 +288,39 @@ export const includeStudentToBatch = async (
   return data;
 };
 
+type TransactionPayload = {
+  course_id: string;
+  registration_id: string;
+};
+
+export const createEnrollmentPaymentTransaction = async (
+  payload: TransactionPayload
+) => {
+  const { course_id, registration_id } = payload;
+
+  const { data: course } = await supabase
+    .from("courses")
+    .select("fee")
+    .eq("id", course_id)
+    .single();
+
+  const fee = course?.fee;
+
+  const { data: transaction } = await supabase
+    .from("transactions")
+    .insert({
+      amount: fee,
+      direction_type: "RECEIVE",
+    })
+    .select("id")
+    .single();
+
+  await supabase.from("enrollment_transactions").insert({
+    transaction_id: transaction?.id,
+    school_registration_id: registration_id,
+  });
+};
+
 export const enrollStudent = async (registration_id: string) => {
   const { data, error } = await supabase
     .from("school_registrations")
@@ -304,6 +337,11 @@ export const enrollStudent = async (registration_id: string) => {
     learner_id: data.learner_id,
     batch_id: data.batch_id,
     course_id: data.course_id,
+  });
+
+  await createEnrollmentPaymentTransaction({
+    course_id: data.course_id,
+    registration_id,
   });
 
   return data;
@@ -394,6 +432,35 @@ export const getStudentsByBatch = async (q: GetStudentsByBatchQuery) => {
       courses(id, title),
       created_at,
       id
+    `);
+
+  if (error) return Promise.reject(error);
+  return data;
+};
+
+export const getEnrollmentTransactions = async () => {
+  const { data, error } = await supabase.from("enrollment_transactions")
+    .select(`
+      id,
+      created_at,
+      school_registration_id(
+        id,
+        first_name,
+        last_name,
+        middle_name,
+        school_batch!school_registrations_batch_id_fkey(
+          id,
+          name
+        ),
+        courses!school_registrations_course_id_fkey(
+          id,
+          title
+        )
+      ),
+      transactions(
+        id,
+        amount
+      )
     `);
 
   if (error) return Promise.reject(error);

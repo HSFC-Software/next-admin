@@ -7,7 +7,6 @@ import {
 } from "@/lib/api";
 import { UpdateApplicationPayload, useUpdateApplication } from "@/lib/mutation";
 import {
-  useGetApplicationList,
   useGetCourses,
   useGetStudentList,
   useGetStudentsByBatch,
@@ -204,7 +203,7 @@ function Admission() {
           </tr>
         </thead>
         <tbody>
-          {students?.map((item, index) => {
+          {students?.map((item: any, index) => {
             const isLast = index === students.length - 1;
 
             return (
