@@ -62,8 +62,6 @@ export default function Networks() {
 
     let q = searchParams.toString();
 
-    console.log(q, queryObject);
-
     axios.get(`/api/networks?${q}`).then((res) => {
       setNetworks(res.data);
     });

@@ -92,8 +92,6 @@ export default function Consolidations() {
 
     let q = searchParams.toString();
 
-    console.log(q, queryObject);
-
     axios.get(`/api/consolidations?${q}`).then((res) => {
       setConsolidations(res.data);
     });

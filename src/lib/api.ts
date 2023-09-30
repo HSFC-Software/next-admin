@@ -229,6 +229,7 @@ export const updateApplication = async (payload: {
   id: string;
   status: "APPROVED" | "REJECTED";
   learner_id?: string;
+  batch_id?: string;
 }) => {
   const id = payload.id;
 
@@ -237,13 +238,14 @@ export const updateApplication = async (payload: {
   };
 
   if (payload.learner_id) body.learner_id = payload.learner_id;
+  if (payload.batch_id) body.batch_id = payload.batch_id;
 
   const { data, error } = await supabase
     .from("school_registrations")
     .update(body)
     .eq("id", id)
     .select(
-      "id, course_id, first_name, status, reference, middle_name, last_name, contact_number, cell_leader_name, network_leader_name, lesson_completed, ojt, with_cellgroup, want_to_be_admin_or_teacher, role, birthday"
+      "id, course_id, first_name, status, reference, middle_name, last_name, contact_number, cell_leader_name, network_leader_name, lesson_completed, ojt, with_cellgroup, want_to_be_admin_or_teacher, role, birthday, batch_id, learner_id"
     )
     .single();
 
@@ -255,11 +257,32 @@ export const getSchoolRegistrationByReference = async (reference: string) => {
   const { data, error } = await supabase
     .from("school_registrations")
     .select(
-      "id, course_id, first_name, status, reference, middle_name, last_name, contact_number, cell_leader_name, network_leader_name, lesson_completed, ojt, with_cellgroup, want_to_be_admin_or_teacher, role, birthday"
+      "id, course_id, first_name, status, reference, middle_name, last_name, contact_number, cell_leader_name, network_leader_name, lesson_completed, ojt, with_cellgroup, want_to_be_admin_or_teacher, role, birthday, batch_id, learner_id"
     )
     .eq("reference", reference)
     .eq("status", "APPROVED")
     .single();
+
+  if (error) return Promise.reject(error);
+  return data;
+};
+
+type IncludeStudentToBatchPayload = {
+  learner_id: string;
+  batch_id: string;
+  course_id: string;
+};
+
+export const includeStudentToBatch = async (
+  payload: IncludeStudentToBatchPayload
+) => {
+  const { data, error } = await supabase //
+    .from("school_masterlist")
+    .insert({
+      learner_id: payload.learner_id,
+      batch_id: payload.batch_id,
+      course_id: payload.course_id,
+    });
 
   if (error) return Promise.reject(error);
   return data;
@@ -271,13 +294,18 @@ export const enrollStudent = async (registration_id: string) => {
     .update({ status: "ENROLLED" })
     .eq("id", registration_id)
     .select(
-      "id, course_id, first_name, status, reference, middle_name, last_name, contact_number, cell_leader_name, network_leader_name, lesson_completed, ojt, with_cellgroup, want_to_be_admin_or_teacher, role, birthday"
+      "id, course_id, first_name, status, reference, middle_name, last_name, contact_number, cell_leader_name, network_leader_name, lesson_completed, ojt, with_cellgroup, want_to_be_admin_or_teacher, role, birthday, batch_id, learner_id"
     )
     .single();
 
-  // todo: handle add student to the batch master list
-
   if (error) return Promise.reject(error);
+
+  await includeStudentToBatch({
+    learner_id: data.learner_id,
+    batch_id: data.batch_id,
+    course_id: data.course_id,
+  });
+
   return data;
 };
 
@@ -308,7 +336,7 @@ export const createStudentRecord = async (payload: StudentRecord) => {
   const { data, error } = await supabase
     .from("students")
     .insert(payload)
-    .select("id, sequence_id")
+    .select("id, sequence_id, learner_id")
     .single();
 
   if (error) {
@@ -322,12 +350,14 @@ export const createStudentRecord = async (payload: StudentRecord) => {
 
   const learnerId = `${schoolId}${year}${sequenceId}`;
 
-  await supabase
+  const { data: updated } = await supabase
     .from("students")
     .update({ learner_id: learnerId })
-    .eq("id", data.id);
+    .eq("id", data.id)
+    .select("id, sequence_id, learner_id")
+    .single();
 
-  return data;
+  return updated;
 };
 
 export const getStudentList = async () => {
@@ -339,5 +369,33 @@ export const getStudentList = async () => {
 
   if (error) return Promise.reject(error);
 
+  return data;
+};
+
+export const getBatchList = async () => {
+  const { data, error } = await supabase //
+    .from("school_batch")
+    .select("id, name, description, created_at")
+    .order("created_at", { ascending: false });
+
+  if (error) return Promise.reject(error);
+  return data;
+};
+
+type GetStudentsByBatchQuery = {
+  batch_id?: string;
+};
+
+export const getStudentsByBatch = async (q: GetStudentsByBatchQuery) => {
+  const { data, error } = await supabase //
+    .from("school_masterlist").select(`
+      school_batch(id, name),
+      students(id, first_name, middle_name, last_name),
+      courses(id, title),
+      created_at,
+      id
+    `);
+
+  if (error) return Promise.reject(error);
   return data;
 };

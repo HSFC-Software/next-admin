@@ -66,6 +66,7 @@ export type UpdateApplicationPayload = {
   id: string;
   status: "APPROVED" | "REJECTED";
   learner_id?: string;
+  batch_id?: string;
 };
 
 export const useUpdateApplication = () => {

@@ -8,16 +8,16 @@ import {
 import { UpdateApplicationPayload, useUpdateApplication } from "@/lib/mutation";
 import {
   useGetApplicationList,
-  useGetBatchList,
   useGetCourses,
+  useGetStudentList,
+  useGetStudentsByBatch,
 } from "@/lib/queries";
 import moment from "moment";
 import Head from "next/head";
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useOnClickOutside } from "usehooks-ts";
 import Swal from "sweetalert2";
-import set from "lodash.set";
+import { Tabs } from ".";
 
 export default function School() {
   return (
@@ -36,7 +36,7 @@ export default function School() {
           <h1 className="text-4xl font-bold flex items-center gap-3">School</h1>
         </div>
         <div>
-          <Tabs activeTabKey="admission" />
+          <Tabs activeTabKey="master-list" />
           <Admission />
         </div>
       </Layout>
@@ -45,7 +45,9 @@ export default function School() {
 }
 
 function Admission() {
-  const { data } = useGetApplicationList();
+  const { data: students } = useGetStudentsByBatch();
+
+  const { data } = useGetStudentList();
   const { data: courses } = useGetCourses();
   const {
     mutate: updateApplication,
@@ -54,10 +56,7 @@ function Admission() {
     reset,
   } = useUpdateApplication();
 
-  const { data: batch } = useGetBatchList();
-
   const [isChecking, setIsChecking] = useState(false);
-  const [selectedBatch, setSelectedBatch] = useState<string | null>(null);
 
   const isUpdating = isChecking || isUpdatingApplication;
 
@@ -95,7 +94,7 @@ function Admission() {
 
     setIsChecking(true);
 
-    let studentId = (document.getElementById("studentId") as HTMLInputElement)
+    const studentId = (document.getElementById("studentId") as HTMLInputElement)
       .value;
 
     // if learner id is not provided
@@ -119,20 +118,17 @@ function Admission() {
         }).then(async (result) => {
           if (result.isConfirmed) {
             // learner id not provided then create new learner
-            const student = await handleCreateStudentRecord();
-            handleUpdateApplication(student?.learner_id);
+            await handleCreateStudentRecord();
+            handleUpdateApplication(studentId);
           }
 
           setShowPrompt(false);
           setIsChecking(false);
         });
-      } else {
-        const student = await handleCreateStudentRecord();
-        studentId = student?.learner_id;
       }
-    }
 
-    // // verify student id
+      await handleCreateStudentRecord();
+    }
 
     handleUpdateApplication(studentId);
   };
@@ -146,15 +142,13 @@ function Admission() {
     };
 
     if (studentId) payload.learner_id = studentId;
-    payload.batch_id = selectedBatch || batch?.[0].id;
-
     updateApplication(payload, { onSettled: () => setIsChecking(false) });
   }
 
   async function handleCreateStudentRecord() {
     if (!selected) return;
 
-    return await createStudentRecord({
+    await createStudentRecord({
       first_name: selected.first_name,
       middle_name: selected.middle_name,
       last_name: selected.last_name,
@@ -192,7 +186,7 @@ function Admission() {
       setTimeout(() => {
         setSelected(null);
         reset();
-      }, 250);
+      }, 1000);
     }
   }, [isSuccess, reset]);
 
@@ -201,31 +195,33 @@ function Admission() {
       <table className="table-auto w-full mt-4 text-sm">
         <thead>
           <tr className="bg-[#f4f7fa]">
-            <td className="py-2 pl-2 font-bold text-[#6d8297] rounded-l-xl">
-              Name
-            </td>
+            <td className="py-2 pl-2 font-bold text-[#6d8297] rounded-l-xl"></td>
+            <td className="py-2 font-bold text-[#6d8297]">Student</td>
             <td className="py-2 font-bold text-[#6d8297]">Course</td>
-
-            <td className="py-2 font-bold text-[#6d8297]">Date Submitted</td>
+            <td className="py-2 font-bold text-[#6d8297]">Batch</td>
+            <td className="py-2 font-bold text-[#6d8297]">Date Enrolled</td>
             <td className="py-2 pl-2 rounded-r-xl"></td>
           </tr>
         </thead>
         <tbody>
-          {data?.map((item, index) => {
-            const isLast = index === data.length - 1;
+          {students?.map((item, index) => {
+            const isLast = index === students.length - 1;
 
             return (
               <tr
-                onClick={() => setSelected(item)}
+                // onClick={() => setSelected(item)}
                 key={item.id}
                 className={`cursor-pointer hover:border-[transparent] hover:bg-[#f4f7fa] border-0 ${
                   isLast ? "border-0" : "border-b"
                 }`}
               >
-                <td className="py-2 pl-2 rounded-l-xl">
-                  {item.first_name} {item.middle_name} {item.last_name}
+                <td className="py-2 pl-2 rounded-l-xl"></td>
+                <td className="py-2">
+                  {item.students?.first_name} {item.students?.middle_name}{" "}
+                  {item.students?.last_name}
                 </td>
-                <td className="py-2">{courseTable[item.course_id]?.title}</td>
+                <td className="py-2">{item.courses.title}</td>
+                <td className="py-2">{item.school_batch.name}</td>
                 <td className="py-2">
                   {moment(item.created_at).format("MMMM DD, YYYY hh:mm A")}
                 </td>
@@ -271,7 +267,7 @@ function Admission() {
               <div>Role</div>
               <div>{selected.role || "N/A"}</div>
             </div>
-            <div className="mt-4 flex items-center gap-2">
+            <div className="my-4 flex items-center gap-2">
               <label className="text-xs text-gray-500 font-medium">
                 Learner ID:
               </label>
@@ -282,25 +278,7 @@ function Admission() {
                 placeholder="Enter Student ID (Leave blank if none)"
               />
             </div>
-            <div className="mt-4 flex items-center gap-2">
-              <label className="text-xs text-gray-500 font-medium">
-                Admit to batch
-              </label>
-              <select
-                onChange={(e) => {
-                  setSelectedBatch(e.target.value);
-                }}
-                className="text-xs"
-                defaultValue={batch?.[0].id}
-              >
-                {batch?.map((batch) => (
-                  <option key={batch.id} value={batch.id}>
-                    {batch.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="mt-7 flex justify-between items-center">
+            <div className="flex justify-between items-center">
               <div className="text-sm flex gap-2">
                 <button
                   disabled={isUpdating}
@@ -387,72 +365,5 @@ function Admission() {
         </div>
       )}
     </>
-  );
-}
-
-const routeterTable = [
-  {
-    key: "dashboard",
-    icon: "🏡",
-    title: "Dashboard",
-    href: "#",
-  },
-  {
-    key: "admission",
-    icon: "🎟️",
-    title: "Admission",
-    href: "/school",
-  },
-  {
-    key: "master-list",
-    icon: "🗃️",
-    title: "Master List",
-    href: "/school/masterlist",
-  },
-  {
-    key: "accounting",
-    icon: "📑",
-    title: "Accounting",
-    href: "/school/accounting",
-  },
-  {
-    key: "students",
-    icon: "🎒",
-    title: "Students",
-    href: "/school/students",
-  },
-  {
-    key: "admin",
-    icon: "⚙️",
-    title: "Admin",
-    href: "#",
-  },
-];
-
-type TabProps = {
-  activeTabKey: string;
-};
-
-export function Tabs(props: TabProps) {
-  return (
-    <ul className="flex flex-wrap -mb-px text-sm font-medium text-center text-gray-500 dark:text-gray-400">
-      {routeterTable.map((route) => {
-        let linkStyles =
-          "inline-flex gap-2 items-center justify-center p-4 border-b-2 border-transparent rounded-t-lg group";
-
-        if (props.activeTabKey === route.key) {
-          linkStyles +=
-            " text-[#6474dc] border-[#6474dc] active dark:text-[#6474dc] dark:border-[#6474dc]";
-        }
-
-        return (
-          <li key={route.key}>
-            <Link href={route.href} className={linkStyles}>
-              <span className="text-xl">{route.icon}</span> {route.title}
-            </Link>
-          </li>
-        );
-      })}
-    </ul>
   );
 }

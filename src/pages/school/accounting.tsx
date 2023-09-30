@@ -91,7 +91,7 @@ function Enrollment(props: EnrollmentProps) {
 
     getSchoolRegistrationByReference(reference)
       .then((data) => {
-        setRegistration(data as ApplicationType);
+        setRegistration(data as unknown as ApplicationType);
       })
       .catch((err) => {
         document.getElementById("not-found")?.classList.remove("hidden");

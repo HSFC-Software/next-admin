@@ -6,7 +6,6 @@ import { useProps } from "@/lib/bit";
 // Use case: Outside React
 export const getRootProps = (key: string) => {
   const store = UNSAFE_retrieveProperty<Store | null>("__BIT_STORE__");
-  console.log({ store });
   return store?.getState(key);
 };
 

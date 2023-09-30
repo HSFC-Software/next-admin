@@ -197,9 +197,6 @@ function Admission() {
             <td className="py-2 font-bold text-[#6d8297]">Name</td>
             <td className="py-2 font-bold text-[#6d8297]">Middle Name</td>
             <td className="py-2 font-bold text-[#6d8297]">Last Name</td>
-            <td className="py-2 font-bold text-[#6d8297]">
-              Last course attended
-            </td>
             <td className="py-2 pl-2 rounded-r-xl"></td>
           </tr>
         </thead>
@@ -220,9 +217,6 @@ function Admission() {
                 <td className="py-2">{item.first_name}</td>
                 <td className="py-2">{item.middle_name}</td>
                 <td className="py-2">{item.last_name}</td>
-                <td className="py-2">
-                  {courseTable[item.ongoing_course]?.title}
-                </td>
                 {/* <td className="py-2">
                   {moment(item.created_at).format("MMMM DD, YYYY hh:mm A")}
                 </td> */}

@@ -127,7 +127,6 @@ export default function NetworkDetails() {
     axios
       .get<Network>(`/api/networks/${params.query.id}`)
       .then((res) => {
-        console.log(res.data);
         setNetwork(res.data);
         setAlias(res.data.name);
       })
@@ -164,7 +163,6 @@ export default function NetworkDetails() {
       .then(init)
       .catch((error) => {
         // TODO: handle error gracefully
-        // console.log(error)
       })
       .finally(() => {
         setIsAddingDisciple(false);
