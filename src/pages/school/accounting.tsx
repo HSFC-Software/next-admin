@@ -12,10 +12,13 @@ import {
 } from "@/lib/queries";
 import moment from "moment";
 import Head from "next/head";
+import Link from "next/link";
 import { MouseEventHandler, useEffect, useRef, useState } from "react";
 import { useOnClickOutside } from "usehooks-ts";
 
 export default function School() {
+  const [showEnrollment, setShowEnrollment] = useState(false);
+
   return (
     <>
       <Head>
@@ -31,46 +34,46 @@ export default function School() {
         <div className="border-b border-gray-200 dark:border-gray-700">
           <ul className="flex flex-wrap -mb-px text-sm font-medium text-center text-gray-500 dark:text-gray-400">
             <li className="mr-2">
-              <a
+              <Link
                 href="#"
                 className="inline-flex gap-2 items-center justify-center p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300 group"
               >
                 <span className="text-xl">🏡 </span>
                 Dashboard
-              </a>
+              </Link>
             </li>
             <li className="mr-2">
-              <a
+              <Link
                 href="/school"
                 className="inline-flex gap-2 items-center justify-center p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300 group"
                 aria-current="page"
               >
                 <span className="text-xl">🎟️</span>Admission
-              </a>
+              </Link>
             </li>
             <li className="mr-2">
-              <a
+              <Link
                 href="#"
                 className="inline-flex gap-2 items-center justify-center p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300 group"
               >
                 <span className="text-xl">🗃️</span> Master List
-              </a>
+              </Link>
             </li>
             <li className="mr-2">
-              <a
+              <Link
                 href="#"
                 className="inline-flex gap-2 items-center justify-center p-4 border-b-2 border-transparent rounded-t-lg group text-[#6474dc] border-[#6474dc] active dark:text-[#6474dc] dark:border-[#6474dc]"
               >
                 <span className="text-xl">📑</span> Accounting
-              </a>
+              </Link>
             </li>
             <li className="mr-2">
-              <a
+              <Link
                 href="#"
                 className="inline-flex gap-2 items-center justify-center p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300 group"
               >
                 <span className="text-xl">🎒</span> Students
-              </a>
+              </Link>
             </li>
           </ul>
         </div>
@@ -81,10 +84,13 @@ export default function School() {
               <option>Enrollment</option>
             </select>
           </div>
-          <button className="text-sm bg-[#6474dc] text-white px-5 rounded-lg py-1">
+          <button
+            onClick={() => setShowEnrollment(true)}
+            className="text-sm bg-[#6474dc] text-white px-5 rounded-lg py-1"
+          >
             Enroll
           </button>
-          <Enrollment />
+          {showEnrollment && <Enrollment />}
         </div>
       </Layout>
     </>
@@ -93,7 +99,7 @@ export default function School() {
 
 function Enrollment() {
   const { data: courses } = useGetCourses();
-  const [registration, setRegistration] = useState<ApplicationType | null>(
+  const [registration, setRegistration] = useState<LinkpplicationType | null>(
     null
   );
 
