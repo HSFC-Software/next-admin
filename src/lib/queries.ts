@@ -10,6 +10,7 @@ import {
   getApplicationList,
   getCourses,
   getSchoolRegistrationByReference,
+  getStudentList,
 } from "./api";
 import jwt from "jsonwebtoken";
 export const useGetVips = (status?: "ASSIGNED" | "PENDING") => {
@@ -112,3 +113,9 @@ export const useGetSchoolRegistrationByReference = (reference: string) =>
       enabled: true,
     }
   );
+
+export const useGetStudentList = () =>
+  useQuery(["getStudentList"], async () => await getStudentList(), {
+    staleTime: 1000 * 60 * 5,
+    enabled: true,
+  });

@@ -6,13 +6,17 @@ import {
   hasDuplicateStudentRecord,
 } from "@/lib/api";
 import { UpdateApplicationPayload, useUpdateApplication } from "@/lib/mutation";
-import { useGetApplicationList, useGetCourses } from "@/lib/queries";
+import {
+  useGetApplicationList,
+  useGetCourses,
+  useGetStudentList,
+} from "@/lib/queries";
 import moment from "moment";
 import Head from "next/head";
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useOnClickOutside } from "usehooks-ts";
 import Swal from "sweetalert2";
+import { Tabs } from ".";
 
 export default function School() {
   return (
@@ -31,7 +35,7 @@ export default function School() {
           <h1 className="text-4xl font-bold flex items-center gap-3">School</h1>
         </div>
         <div>
-          <Tabs activeTabKey="admission" />
+          <Tabs activeTabKey="students" />
           <Admission />
         </div>
       </Layout>
@@ -40,7 +44,7 @@ export default function School() {
 }
 
 function Admission() {
-  const { data } = useGetApplicationList();
+  const { data } = useGetStudentList();
   const { data: courses } = useGetCourses();
   const {
     mutate: updateApplication,
@@ -188,12 +192,14 @@ function Admission() {
       <table className="table-auto w-full mt-4 text-sm">
         <thead>
           <tr className="bg-[#f4f7fa]">
-            <td className="py-2 pl-2 font-bold text-[#6d8297] rounded-l-xl">
-              Name
+            <td className="py-2 pl-2 font-bold text-[#6d8297] rounded-l-xl"></td>
+            <td className="py-2 font-bold text-[#6d8297]">Learner ID</td>
+            <td className="py-2 font-bold text-[#6d8297]">Name</td>
+            <td className="py-2 font-bold text-[#6d8297]">Middle Name</td>
+            <td className="py-2 font-bold text-[#6d8297]">Last Name</td>
+            <td className="py-2 font-bold text-[#6d8297]">
+              Last course attended
             </td>
-            <td className="py-2 font-bold text-[#6d8297]">Course</td>
-
-            <td className="py-2 font-bold text-[#6d8297]">Date Submitted</td>
             <td className="py-2 pl-2 rounded-r-xl"></td>
           </tr>
         </thead>
@@ -203,19 +209,23 @@ function Admission() {
 
             return (
               <tr
-                onClick={() => setSelected(item)}
+                // onClick={() => setSelected(item)}
                 key={item.id}
                 className={`cursor-pointer hover:border-[transparent] hover:bg-[#f4f7fa] border-0 ${
                   isLast ? "border-0" : "border-b"
                 }`}
               >
-                <td className="py-2 pl-2 rounded-l-xl">
-                  {item.first_name} {item.middle_name} {item.last_name}
-                </td>
-                <td className="py-2">{courseTable[item.course_id]?.title}</td>
+                <td className="py-2 pl-2 rounded-l-xl"></td>
+                <td className="py-2">{item.learner_id}</td>
+                <td className="py-2">{item.first_name}</td>
+                <td className="py-2">{item.middle_name}</td>
+                <td className="py-2">{item.last_name}</td>
                 <td className="py-2">
-                  {moment(item.created_at).format("MMMM DD, YYYY hh:mm A")}
+                  {courseTable[item.ongoing_course]?.title}
                 </td>
+                {/* <td className="py-2">
+                  {moment(item.created_at).format("MMMM DD, YYYY hh:mm A")}
+                </td> */}
                 <td className="py-2 pl-2 rounded-r-xl " />
               </tr>
             );
@@ -356,72 +366,5 @@ function Admission() {
         </div>
       )}
     </>
-  );
-}
-
-const routeterTable = [
-  {
-    key: "dashboard",
-    icon: "🏡",
-    title: "Dashboard",
-    href: "#",
-  },
-  {
-    key: "admission",
-    icon: "🎟️",
-    title: "Admission",
-    href: "/school",
-  },
-  {
-    key: "master-list",
-    icon: "🗃️",
-    title: "Master List",
-    href: "#",
-  },
-  {
-    key: "accounting",
-    icon: "📑",
-    title: "Accounting",
-    href: "/school/accounting",
-  },
-  {
-    key: "students",
-    icon: "🎒",
-    title: "Students",
-    href: "/school/students",
-  },
-  {
-    key: "admin",
-    icon: "⚙️",
-    title: "Admin",
-    href: "/school/admin",
-  },
-];
-
-type TabProps = {
-  activeTabKey: string;
-};
-
-export function Tabs(props: TabProps) {
-  return (
-    <ul className="flex flex-wrap -mb-px text-sm font-medium text-center text-gray-500 dark:text-gray-400">
-      {routeterTable.map((route) => {
-        let linkStyles =
-          "inline-flex gap-2 items-center justify-center p-4 border-b-2 border-transparent rounded-t-lg group";
-
-        if (props.activeTabKey === route.key) {
-          linkStyles +=
-            " text-[#6474dc] border-[#6474dc] active dark:text-[#6474dc] dark:border-[#6474dc]";
-        }
-
-        return (
-          <li key={route.key}>
-            <Link href={route.href} className={linkStyles}>
-              <span className="text-xl">{route.icon}</span> {route.title}
-            </Link>
-          </li>
-        );
-      })}
-    </ul>
   );
 }

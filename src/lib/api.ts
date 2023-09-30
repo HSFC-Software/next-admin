@@ -228,7 +228,7 @@ export const getCourses = async () => {
 export const updateApplication = async (payload: {
   id: string;
   status: "APPROVED" | "REJECTED";
-  student_id?: string;
+  learner_id?: string;
 }) => {
   const id = payload.id;
 
@@ -236,7 +236,7 @@ export const updateApplication = async (payload: {
     status: payload.status,
   };
 
-  if (payload.student_id) body.student_id = payload.student_id;
+  if (payload.learner_id) body.learner_id = payload.learner_id;
 
   const { data, error } = await supabase
     .from("school_registrations")
@@ -278,5 +278,66 @@ export const enrollStudent = async (registration_id: string) => {
   // todo: handle add student to the batch master list
 
   if (error) return Promise.reject(error);
+  return data;
+};
+
+type StudentRecord = {
+  first_name: string;
+  last_name: string;
+  middle_name: string;
+  level_id?: string;
+};
+export const hasDuplicateStudentRecord = async (
+  payload: StudentRecord
+): Promise<boolean> => {
+  const { data, error } = await supabase
+    .from("students")
+    .select("*")
+    .eq("first_name", payload.first_name)
+    .eq("last_name", payload.last_name)
+    .eq("middle_name", payload.middle_name)
+    .single();
+
+  if (error) return false;
+  if (data) return true;
+
+  return false;
+};
+
+export const createStudentRecord = async (payload: StudentRecord) => {
+  const { data, error } = await supabase
+    .from("students")
+    .insert(payload)
+    .select("id, sequence_id")
+    .single();
+
+  if (error) {
+    return Promise.reject(error);
+  }
+
+  // learner id format: 4172825-23-0001
+  const schoolId = "4172825";
+  const year = new Date().getFullYear().toString().substr(2, 2);
+  const sequenceId = data.sequence_id.toString().padStart(4, "0");
+
+  const learnerId = `${schoolId}${year}${sequenceId}`;
+
+  await supabase
+    .from("students")
+    .update({ learner_id: learnerId })
+    .eq("id", data.id);
+
+  return data;
+};
+
+export const getStudentList = async () => {
+  const { data, error } = await supabase //
+    .from("students")
+    .select(
+      "first_name, last_name, middle_name, learner_id, id, ongoing_course"
+    );
+
+  if (error) return Promise.reject(error);
+
   return data;
 };

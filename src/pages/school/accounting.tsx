@@ -15,6 +15,7 @@ import Head from "next/head";
 import Link from "next/link";
 import { MouseEventHandler, useEffect, useRef, useState } from "react";
 import { useOnClickOutside } from "usehooks-ts";
+import { Tabs } from ".";
 
 export default function School() {
   const [showEnrollment, setShowEnrollment] = useState(false);
@@ -31,52 +32,7 @@ export default function School() {
         <div className="flex items-center gap-4 mb-7">
           <h1 className="text-4xl font-bold flex items-center gap-3">School</h1>
         </div>
-        <div className="border-b border-gray-200 dark:border-gray-700">
-          <ul className="flex flex-wrap -mb-px text-sm font-medium text-center text-gray-500 dark:text-gray-400">
-            <li className="mr-2">
-              <Link
-                href="#"
-                className="inline-flex gap-2 items-center justify-center p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300 group"
-              >
-                <span className="text-xl">🏡 </span>
-                Dashboard
-              </Link>
-            </li>
-            <li className="mr-2">
-              <Link
-                href="/school"
-                className="inline-flex gap-2 items-center justify-center p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300 group"
-                aria-current="page"
-              >
-                <span className="text-xl">🎟️</span>Admission
-              </Link>
-            </li>
-            <li className="mr-2">
-              <Link
-                href="#"
-                className="inline-flex gap-2 items-center justify-center p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300 group"
-              >
-                <span className="text-xl">🗃️</span> Master List
-              </Link>
-            </li>
-            <li className="mr-2">
-              <Link
-                href="#"
-                className="inline-flex gap-2 items-center justify-center p-4 border-b-2 border-transparent rounded-t-lg group text-[#6474dc] border-[#6474dc] active dark:text-[#6474dc] dark:border-[#6474dc]"
-              >
-                <span className="text-xl">📑</span> Accounting
-              </Link>
-            </li>
-            <li className="mr-2">
-              <Link
-                href="#"
-                className="inline-flex gap-2 items-center justify-center p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300 group"
-              >
-                <span className="text-xl">🎒</span> Students
-              </Link>
-            </li>
-          </ul>
-        </div>
+        <Tabs activeTabKey="accounting" />
         <div className="flex justify-between items-center">
           <div className="py-7">
             Transaction Type:{" "}
@@ -90,14 +46,19 @@ export default function School() {
           >
             Enroll
           </button>
-          {showEnrollment && <Enrollment />}
+          {showEnrollment && (
+            <Enrollment onClose={() => setShowEnrollment(false)} />
+          )}
         </div>
       </Layout>
     </>
   );
 }
 
-function Enrollment() {
+type EnrollmentProps = {
+  onClose: () => void;
+};
+function Enrollment(props: EnrollmentProps) {
   const { data: courses } = useGetCourses();
   const [registration, setRegistration] = useState<ApplicationType | null>(
     null
@@ -160,7 +121,10 @@ function Enrollment() {
   return (
     <div className="fixed top-0 left-0 h-screen w-screen bg-[#0000004d] flex items-center justify-center">
       <div className="p-7 bg-white rounded-2xl relative w-[595px]">
-        <button className="absolute right-0 top-0 p-7 text-xs text-[#6474dc]">
+        <button
+          onClick={props.onClose}
+          className="absolute right-0 top-0 p-7 text-xs text-[#6474dc]"
+        >
           Close
         </button>
 

@@ -65,7 +65,7 @@ export const useUpdateConsolidator = (id: string, q?: string) => {
 export type UpdateApplicationPayload = {
   id: string;
   status: "APPROVED" | "REJECTED";
-  student_id?: string;
+  learner_id?: string;
 };
 
 export const useUpdateApplication = () => {
