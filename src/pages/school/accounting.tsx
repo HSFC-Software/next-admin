@@ -4,18 +4,11 @@ import {
   enrollStudent,
   getSchoolRegistrationByReference,
 } from "@/lib/api";
-import { UpdateApplicationPayload, useUpdateApplication } from "@/lib/mutation";
-import {
-  useGetApplicationList,
-  useGetCourses,
-  useGetSchoolRegistrationByReference,
-} from "@/lib/queries";
-import moment from "moment";
+import { useGetCourses } from "@/lib/queries";
 import Head from "next/head";
-import Link from "next/link";
-import { MouseEventHandler, useEffect, useRef, useState } from "react";
-import { useOnClickOutside } from "usehooks-ts";
+import { useState } from "react";
 import { Tabs } from ".";
+import Swal from "sweetalert2";
 
 export default function School() {
   const [showEnrollment, setShowEnrollment] = useState(false);
@@ -34,8 +27,8 @@ export default function School() {
         </div>
         <Tabs activeTabKey="accounting" />
         <div className="flex justify-between items-center">
-          <div className="py-7">
-            Transaction Type:{" "}
+          <div className="py-7 text-sm">
+            <span className="font-medium">Transaction Type</span>
             <select>
               <option>Enrollment</option>
             </select>
@@ -110,8 +103,15 @@ function Enrollment(props: EnrollmentProps) {
     e.target.disabled = true;
 
     enrollStudent(registration?.id)
-      .then((data) => {
-        setRegistration(null);
+      .then(() => {
+        Swal.fire({
+          title: "Student enrolled!",
+          icon: "success",
+          confirmButtonColor: "#6474dc",
+          confirmButtonText: "Close",
+        }).then(async (result) => {
+          props.onClose();
+        });
       })
       .finally(() => {
         e.target.disabled = false;

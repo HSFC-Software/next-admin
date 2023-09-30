@@ -17,7 +17,6 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useOnClickOutside } from "usehooks-ts";
 import Swal from "sweetalert2";
-import set from "lodash.set";
 
 export default function School() {
   return (
@@ -132,8 +131,6 @@ function Admission() {
       }
     }
 
-    // // verify student id
-
     handleUpdateApplication(studentId);
   };
 
@@ -148,7 +145,17 @@ function Admission() {
     if (studentId) payload.learner_id = studentId;
     payload.batch_id = selectedBatch || batch?.[0].id;
 
-    updateApplication(payload, { onSettled: () => setIsChecking(false) });
+    updateApplication(payload, {
+      onSettled: () => setIsChecking(false),
+      onSuccess: () => {
+        Swal.fire({
+          text: "Student application has been approved",
+          icon: "success",
+          confirmButtonColor: "#6474dc",
+          confirmButtonText: "Close",
+        });
+      },
+    });
   }
 
   async function handleCreateStudentRecord() {
@@ -170,7 +177,16 @@ function Admission() {
       status: "REJECTED",
     };
 
-    updateApplication(payload);
+    updateApplication(payload, {
+      onSuccess: () => {
+        Swal.fire({
+          text: "Student application has been rejected.",
+          icon: "success",
+          confirmButtonColor: "#6474dc",
+          confirmButtonText: "Close",
+        });
+      },
+    });
   };
 
   useEffect(() => {
