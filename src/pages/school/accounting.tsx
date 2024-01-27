@@ -4,7 +4,11 @@ import {
   enrollStudent,
   getSchoolRegistrationByReference,
 } from "@/lib/api";
-import { useGetCourses, useGetEnrollmentTransactions } from "@/lib/queries";
+import {
+  useGetBatchList,
+  useGetCourses,
+  useGetEnrollmentTransactions,
+} from "@/lib/queries";
 import Head from "next/head";
 import { useEffect, useState } from "react";
 import { Tabs } from ".";
@@ -13,11 +17,26 @@ import moment from "moment";
 import { useQueryClient } from "react-query";
 import { supabase } from "@/lib/supabase";
 
+const Php = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "PHP",
+});
+
 export default function School() {
-  const [showEnrollment, setShowEnrollment] = useState(false);
+  const queryClient = useQueryClient();
+
+  const { data: batch } = useGetBatchList();
+  const { data: courses } = useGetCourses();
   const { data: transactions } = useGetEnrollmentTransactions();
 
-  const queryClient = useQueryClient();
+  const [selectedBatchId, setSelectedBatchId] = useState("");
+  const [selectedCourseId, setSelectedCourseId] = useState("All");
+
+  useEffect(() => {
+    if (!selectedBatchId && batch?.length) {
+      setSelectedBatchId(batch[0].id);
+    }
+  }, [batch, selectedBatchId]);
 
   useEffect(() => {
     const listener = supabase
@@ -34,6 +53,26 @@ export default function School() {
     };
   }, []);
 
+  let total = 0;
+
+  const filteredTransactions = transactions?.filter((item: any) => {
+    const batchId = item.school_registration_id.school_batch.id;
+    const courseId = item.school_registration_id.courses.id;
+
+    if (selectedBatchId === batchId) {
+      if (selectedCourseId !== "All") {
+        if (courseId !== selectedCourseId) return false;
+      }
+
+      const amount = item.transactions.amount;
+      total += amount;
+
+      return true;
+    }
+
+    return false;
+  });
+
   return (
     <>
       <Head>
@@ -47,22 +86,43 @@ export default function School() {
           <h1 className="text-4xl font-bold flex items-center gap-3">School</h1>
         </div>
         <Tabs activeTabKey="accounting" />
-        <div className="flex justify-between items-center">
-          <div className="py-7 text-sm">
-            <span className="font-medium">Transaction Type</span>
-            <select>
-              <option>Enrollment</option>
-            </select>
+        <div className="py-7 text-sm flex gap-4 items-center justify-between pr-2">
+          <div className="flex gap-4">
+            <div className="flex gap-2">
+              <span className="font-medium">Batch</span>
+              <select
+                value={selectedBatchId}
+                onChange={(e) => setSelectedBatchId(e.target.value)}
+              >
+                {batch?.map((b) => {
+                  return (
+                    <option value={b.id} key={b.id}>
+                      {b.name}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+            <div className="flex gap-2">
+              <span className="font-medium">Course</span>
+              <select
+                value={selectedCourseId}
+                onChange={(e) => setSelectedCourseId(e.target.value)}
+              >
+                <option value={undefined}>All</option>
+                {courses?.map((c) => {
+                  return (
+                    <option value={c.id} key={c.id}>
+                      {c.title}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
           </div>
-          <button
-            onClick={() => setShowEnrollment(true)}
-            className="text-sm bg-[#6474dc] text-white px-5 rounded-lg py-1"
-          >
-            Enroll
-          </button>
-          {showEnrollment && (
-            <Enrollment onClose={() => setShowEnrollment(false)} />
-          )}
+          <div>
+            Total: <strong>{Php.format(total)}</strong>
+          </div>
         </div>
         <table className="table-auto w-full mt-4 text-sm">
           <thead>
@@ -79,8 +139,8 @@ export default function School() {
             </tr>
           </thead>
           <tbody>
-            {transactions?.map((item: any, index) => {
-              const isLast = index === transactions.length - 1;
+            {filteredTransactions?.map((item: any, index) => {
+              const isLast = index === filteredTransactions.length - 1;
               return (
                 <tr
                   key={item.id}

@@ -447,8 +447,10 @@ export const getStudentsByBatch = async (q: GetStudentsByBatchQuery) => {
 };
 
 export const getEnrollmentTransactions = async () => {
-  const { data, error } = await supabase.from("enrollment_transactions")
-    .select(`
+  const { data, error } = await supabase
+    .from("enrollment_transactions")
+    .select(
+      `
       id,
       created_at,
       school_registration_id(
@@ -469,7 +471,9 @@ export const getEnrollmentTransactions = async () => {
         id,
         amount
       )
-    `);
+    `
+    )
+    .order("created_at", { ascending: false });
 
   if (error) return Promise.reject(error);
   return data;
