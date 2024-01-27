@@ -426,12 +426,12 @@ function Admission() {
 }
 
 const routeterTable = [
-  {
-    key: "dashboard",
-    icon: "🏡",
-    title: "Dashboard",
-    href: "#",
-  },
+  // {
+  //   key: "dashboard",
+  //   icon: "🏡",
+  //   title: "Dashboard",
+  //   href: "#",
+  // },
   {
     key: "admission",
     icon: "🎟️",
@@ -456,12 +456,12 @@ const routeterTable = [
     title: "Students",
     href: "/school/students",
   },
-  {
-    key: "admin",
-    icon: "⚙️",
-    title: "Admin",
-    href: "#",
-  },
+  // {
+  //   key: "admin",
+  //   icon: "⚙️",
+  //   title: "Admin",
+  //   href: "#",
+  // },
 ];
 
 type TabProps = {

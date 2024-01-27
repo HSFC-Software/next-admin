@@ -136,14 +136,14 @@ export const useGetBatchList = () => {
   );
 };
 
-export const useGetStudentsByBatch = () => {
+export const useGetStudentsByBatch = (batch_id?: string) => {
   return useQuery(
-    ["getStudentsByBatch"],
+    ["getStudentsByBatch", batch_id],
     async () => {
-      return await getStudentsByBatch({});
+      return await getStudentsByBatch({ batch_id });
     },
     {
-      staleTime: 1000 * 60 * 5,
+      staleTime: 1000 * 30,
       enabled: true,
     }
   );

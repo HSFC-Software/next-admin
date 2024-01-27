@@ -425,7 +425,7 @@ type GetStudentsByBatchQuery = {
 };
 
 export const getStudentsByBatch = async (q: GetStudentsByBatchQuery) => {
-  const { data, error } = await supabase //
+  let query = supabase //
     .from("school_masterlist").select(`
       school_batch(id, name),
       students(id, first_name, middle_name, last_name),
@@ -433,6 +433,14 @@ export const getStudentsByBatch = async (q: GetStudentsByBatchQuery) => {
       created_at,
       id
     `);
+
+  if (q.batch_id) {
+    query = query.eq("batch_id", q.batch_id);
+  }
+
+  query.order("created_at", { ascending: false });
+
+  const { data, error } = await query;
 
   if (error) return Promise.reject(error);
   return data;

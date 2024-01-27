@@ -7,6 +7,7 @@ import {
 } from "@/lib/api";
 import { UpdateApplicationPayload, useUpdateApplication } from "@/lib/mutation";
 import {
+  useGetBatchList,
   useGetCourses,
   useGetStudentList,
   useGetStudentsByBatch,
@@ -46,8 +47,12 @@ export default function School() {
 }
 
 function Admission() {
-  const { data: students } = useGetStudentsByBatch();
+  const [selectedBatchId, setSelectedBatchId] = useState("");
+  const [fSearch, setFSearch] = useState("");
+
   const queryClient = useQueryClient();
+  const { data: batch } = useGetBatchList();
+  const { data: students } = useGetStudentsByBatch(selectedBatchId || batch?.[0].id); // prettier-ignore
 
   useEffect(() => {
     const listener = supabase
@@ -64,7 +69,7 @@ function Admission() {
     };
   }, []);
 
-  const { data } = useGetStudentList();
+  // const { data } = useGetStudentList();
   const { data: courses } = useGetCourses();
   const {
     mutate: updateApplication,
@@ -209,6 +214,31 @@ function Admission() {
 
   return (
     <>
+      <div className="py-7 text-sm flex gap-2 items-center">
+        <div>
+          <input
+            className="min-w-[280px] py-2 px-4 border rounded-xl"
+            placeholder="Search student by name"
+            onChange={(e) => setFSearch(e.target.value)}
+            value={fSearch}
+          />
+        </div>
+        <div>
+          <span className="font-medium">Batch</span>
+          <select
+            value={selectedBatchId}
+            onChange={(e) => setSelectedBatchId(e.target.value)}
+          >
+            {batch?.map((b) => {
+              return (
+                <option value={b.id} key={b.id}>
+                  {b.name}
+                </option>
+              );
+            })}
+          </select>
+        </div>
+      </div>
       <table className="table-auto w-full mt-4 text-sm">
         <thead>
           <tr className="bg-[#f4f7fa]">
@@ -221,31 +251,56 @@ function Admission() {
           </tr>
         </thead>
         <tbody>
-          {students?.map((item: any, index) => {
-            const isLast = index === students.length - 1;
+          {students
+            ?.filter((item: any) => {
+              let isVisible = false;
+              const keywords = fSearch.split(" ");
 
-            return (
-              <tr
-                // onClick={() => setSelected(item)}
-                key={item.id}
-                className={`cursor-pointer hover:border-[transparent] hover:bg-[#f4f7fa] border-0 ${
-                  isLast ? "border-0" : "border-b"
-                }`}
-              >
-                <td className="py-2 pl-2 rounded-l-xl"></td>
-                <td className="py-2">
-                  {item.students?.first_name} {item.students?.middle_name}{" "}
-                  {item.students?.last_name}
-                </td>
-                <td className="py-2">{item.courses.title}</td>
-                <td className="py-2">{item.school_batch.name}</td>
-                <td className="py-2">
-                  {moment(item.created_at).format("MMMM DD, YYYY hh:mm A")}
-                </td>
-                <td className="py-2 pl-2 rounded-r-xl " />
-              </tr>
-            );
-          })}
+              keywords.forEach((q) => {
+                let keyword = q.toLowerCase();
+
+                let firstName: string =
+                  item.students?.first_name?.toLowerCase();
+                let middleName: string =
+                  item.students?.middle_name?.toLowerCase();
+                let lastName: string = item.students?.last_name?.toLowerCase();
+
+                if (
+                  firstName.includes(keyword) ||
+                  middleName.includes(keyword) ||
+                  lastName.includes(keyword)
+                ) {
+                  isVisible = true;
+                }
+              });
+
+              return isVisible;
+            })
+            ?.map((item: any, index) => {
+              const isLast = index === students.length - 1;
+
+              return (
+                <tr
+                  // onClick={() => setSelected(item)}
+                  key={item.id}
+                  className={`cursor-pointer hover:border-[transparent] hover:bg-[#f4f7fa] border-0 ${
+                    isLast ? "border-0" : "border-b"
+                  }`}
+                >
+                  <td className="py-2 pl-2 rounded-l-xl"></td>
+                  <td className="py-2">
+                    {item.students?.first_name} {item.students?.middle_name}{" "}
+                    {item.students?.last_name}
+                  </td>
+                  <td className="py-2">{item.courses.title}</td>
+                  <td className="py-2">{item.school_batch.name}</td>
+                  <td className="py-2">
+                    {moment(item.created_at).format("MMMM DD, YYYY hh:mm A")}
+                  </td>
+                  <td className="py-2 pl-2 rounded-r-xl " />
+                </tr>
+              );
+            })}
         </tbody>
       </table>
       {selected && (
