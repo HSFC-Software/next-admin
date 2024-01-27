@@ -38,7 +38,7 @@ export function getServerSidePropsWithAuth(
       redirect_uri += "?next=" + ctx.query.redirect_uri;
     }
 
-    let destination = `https://sso.fishgen.org?client_id=disciplr&response_type=token&redirect_uri=${redirect_uri}&scope=openid%20profile%20email&state=disciplr`;
+    let destination = `https://sso-disciplr.netlify.app?client_id=disciplr&response_type=token&redirect_uri=${redirect_uri}&scope=openid%20profile%20email&state=disciplr`;
 
     return {
       redirect: {
@@ -48,3 +48,5 @@ export function getServerSidePropsWithAuth(
     };
   };
 }
+
+
