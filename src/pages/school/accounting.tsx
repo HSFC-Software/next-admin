@@ -121,8 +121,20 @@ export default function School() {
             </div>
           </div>
           <div>
+             <button
+            onClick={() => setShowEnrollment(true)}
+            className="text-sm bg-[#6474dc] text-white px-5 rounded-lg py-1"
+          >
+            Enroll
+          </button>
+          {showEnrollment && (
+            <Enrollment onClose={() => setShowEnrollment(false)} />
+          )}
+            <div>
             Total: <strong>{Php.format(total)}</strong>
           </div>
+          </div>
+          
         </div>
         <table className="table-auto w-full mt-4 text-sm">
           <thead>
