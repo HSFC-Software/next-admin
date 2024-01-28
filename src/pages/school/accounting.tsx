@@ -24,6 +24,7 @@ const Php = new Intl.NumberFormat("en-US", {
 
 export default function School() {
   const queryClient = useQueryClient();
+  const [showEnrollment, setShowEnrollment] = useState(false);
 
   const { data: batch } = useGetBatchList();
   const { data: courses } = useGetCourses();
