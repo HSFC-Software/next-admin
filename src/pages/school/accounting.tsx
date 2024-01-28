@@ -128,8 +128,6 @@ export default function School() {
           >
             Enroll
           </button>
-          {showEnrollment && (
-            <Enrollment onClose={() => setShowEnrollment(false)} />
             Total: <strong>{Php.format(total)}</strong>
           </div>
         </div>
