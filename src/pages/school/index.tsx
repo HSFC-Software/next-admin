@@ -249,6 +249,7 @@ function Admission() {
             <option value="PENDING">Pending</option>
             <option value="APPROVED">Approved</option>
             <option value="REJECTED">Declined</option>
+            <option value="ENROLLED">Enrolled</option>
           </select>
         </div>
         <div className="flex gap-2">
@@ -380,6 +381,8 @@ function Admission() {
               <div>{selected.want_to_be_admin_or_teacher ? "✅" : "❌"}</div>
               <div>Role</div>
               <div>{selected.role || "N/A"}</div>
+              <div>Reference</div>
+              <div>{selected.reference || "N/A"}</div>
             </div>
             {selected.status === "PENDING" && (
               <>

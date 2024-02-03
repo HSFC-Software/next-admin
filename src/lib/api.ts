@@ -358,6 +358,27 @@ export const enrollStudent = async (registration_id: string) => {
   });
 
   // todo: send sms
+  const { data: course } = await supabase
+    .from("courses")
+    .select("id, title")
+    .eq("id", data.course_id)
+    .single();
+
+  const { data: batch } = await supabase
+    .from("school_batch")
+    .select("name")
+    .eq("id", data.batch_id)
+    .single();
+
+  let name = data.first_name;
+
+  if (!name) name += " ";
+  if (data.last_name) name += data.last_name;
+
+  name = name.replace(/^./, (str: string) => str.toUpperCase());
+
+  let message = `Congratulations ${name}! you have been enrolled to ${course?.title} (${batch?.name})`;
+  console.log("🚀 ~ enrollStudent ~ message:", message);
 
   return data;
 };
