@@ -372,13 +372,18 @@ export const enrollStudent = async (registration_id: string) => {
 
   let name = data.first_name;
 
-  if (!name) name += " ";
-  if (data.last_name) name += data.last_name;
-
+  name = name.toLowerCase();
   name = name.replace(/^./, (str: string) => str.toUpperCase());
 
-  let message = `Congratulations ${name}! you have been enrolled to ${course?.title} (${batch?.name})`;
-  console.log("🚀 ~ enrollStudent ~ message:", message);
+  let lastName = data.last_name;
+  lastName = lastName.toLowerCase();
+  lastName = lastName.replace(/^./, (str: string) => str.toUpperCase());
+
+  if (name) name += " ";
+  name += lastName;
+
+  const message = `Congratulations ${name}! you have been enrolled to ${course?.title} (${batch?.name})`;
+  sendBulkSms(message, ["09951104834"], "HSFCTaytay");
 
   return data;
 };
@@ -439,7 +444,8 @@ export const getStudentList = async () => {
     .from("students")
     .select(
       "first_name, last_name, middle_name, learner_id, id, ongoing_course"
-    );
+    )
+    .order("created_at", { ascending: false });
 
   if (error) return Promise.reject(error);
 

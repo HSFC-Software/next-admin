@@ -56,6 +56,7 @@ function Admission() {
 
   const { data: batch } = useGetBatchList();
 
+  const [keyword, setKeyword] = useState("");
   const [isChecking, setIsChecking] = useState(false);
   const [selectedBatch, setSelectedBatch] = useState<string | null>(null);
   const [startDate, setStartDate] = useState(() => {
@@ -243,6 +244,14 @@ function Admission() {
     <>
       <div className="py-7 text-sm flex gap-4 items-center pr-2">
         <div className="flex gap-2">
+          <input
+            value={keyword}
+            placeholder="Search student"
+            onChange={(e) => setKeyword(e.target.value)}
+            className="min-w-[280px] py-2 px-4 border rounded-xl"
+          />
+        </div>
+        <div className="flex gap-2">
           <span className="font-medium">Status</span>
           <select value={status} onChange={(e) => setStatus(e.target.value)}>
             <option>All</option>
@@ -283,6 +292,28 @@ function Admission() {
         </thead>
         <tbody>
           {data
+            ?.filter((item: any) => {
+              let isVisible = false;
+              const keywords = keyword.split(" ");
+
+              keywords.forEach((q) => {
+                let keyword = q.toLowerCase();
+
+                let firstName: string = item?.first_name?.toLowerCase();
+                let middleName: string = item?.middle_name?.toLowerCase();
+                let lastName: string = item?.last_name?.toLowerCase();
+
+                if (
+                  firstName.includes(keyword) ||
+                  middleName.includes(keyword) ||
+                  lastName.includes(keyword)
+                ) {
+                  isVisible = true;
+                }
+              });
+
+              return isVisible;
+            })
             ?.filter((item) => {
               if (status === "All") return true;
               if (status === item.status) return true;
