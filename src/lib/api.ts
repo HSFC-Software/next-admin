@@ -206,11 +206,22 @@ export type ApplicationType = {
   with_cellgroup: boolean;
 };
 
-export const getApplicationList = async () => {
+export type ApplicationTypeRequest = {
+  startDate: Date;
+  endDate: Date;
+};
+
+export const getApplicationList = async (payload: ApplicationTypeRequest) => {
+  const startDateString = payload.startDate.toISOString();
+  const endDateString = payload.endDate.toISOString();
+
   const { data, error } = await supabase //
     .from("school_registrations")
     .select("*, course_id")
-    .eq("status", "PENDING");
+    .lte("created_at", endDateString)
+    .gte("created_at", startDateString)
+    .order("created_at", { ascending: false })
+    .or("status.eq.PENDING,status.eq.APPROVED,status.eq.REJECTED");
 
   if (error) return Promise.reject(error);
   return data as ApplicationType[];
@@ -343,6 +354,8 @@ export const enrollStudent = async (registration_id: string) => {
     course_id: data.course_id,
     registration_id,
   });
+
+  // send sms
 
   return data;
 };

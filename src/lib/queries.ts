@@ -14,6 +14,7 @@ import {
   getBatchList,
   getStudentsByBatch,
   getEnrollmentTransactions,
+  ApplicationTypeRequest,
 } from "./api";
 import jwt from "jsonwebtoken";
 export const useGetVips = (status?: "ASSIGNED" | "PENDING") => {
@@ -95,11 +96,15 @@ export const useGetRecentConsolidation = (id: string) => {
   );
 };
 
-export const useGetApplicationList = () =>
-  useQuery(["getApplicationList"], async () => await getApplicationList(), {
-    staleTime: 1000 * 60 * 5,
-    enabled: true,
-  });
+export const useGetApplicationList = (payload: ApplicationTypeRequest) =>
+  useQuery(
+    ["getApplicationList", payload.startDate, payload.endDate],
+    async () => await getApplicationList(payload),
+    {
+      staleTime: 1000 * 60 * 5,
+      enabled: true,
+    }
+  );
 
 export const useGetCourses = () =>
   useQuery(["getCourses"], async () => await getCourses(), {

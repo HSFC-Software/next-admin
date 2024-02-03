@@ -46,7 +46,6 @@ export default function School() {
 }
 
 function Admission() {
-  const { data } = useGetApplicationList();
   const { data: courses } = useGetCourses();
   const {
     mutate: updateApplication,
@@ -59,6 +58,15 @@ function Admission() {
 
   const [isChecking, setIsChecking] = useState(false);
   const [selectedBatch, setSelectedBatch] = useState<string | null>(null);
+  const [startDate, setStartDate] = useState(() => {
+    const today = moment();
+    today.subtract("days", 7);
+    return today.toDate();
+  });
+  const [endDate, setEndDate] = useState(new Date());
+  const [status, setStatus] = useState("All");
+
+  const { data } = useGetApplicationList({ startDate, endDate });
 
   const isUpdating = isChecking || isUpdatingApplication;
 
@@ -233,6 +241,33 @@ function Admission() {
 
   return (
     <>
+      <div className="py-7 text-sm flex gap-4 items-center pr-2">
+        <div className="flex gap-2">
+          <span className="font-medium">Status</span>
+          <select value={status} onChange={(e) => setStatus(e.target.value)}>
+            <option>All</option>
+            <option value="PENDING">Pending</option>
+            <option value="APPROVED">Approved</option>
+            <option value="REJECTED">Declined</option>
+          </select>
+        </div>
+        <div className="flex gap-2">
+          <span className="font-medium">Date Start</span>
+          <input
+            type="date"
+            value={moment(startDate).format("YYYY-MM-DD")}
+            onChange={(e) => setStartDate(moment(e.target.value).toDate())}
+          />
+        </div>
+        <div className="flex gap-2">
+          <span className="font-medium">Date End</span>
+          <input
+            type="date"
+            value={moment(endDate).format("YYYY-MM-DD")}
+            onChange={(e) => setEndDate(moment(e.target.value).toDate())}
+          />
+        </div>
+      </div>
       <table className="table-auto w-full mt-4 text-sm">
         <thead>
           <tr className="bg-[#f4f7fa]">
@@ -240,34 +275,66 @@ function Admission() {
               Name
             </td>
             <td className="py-2 font-bold text-[#6d8297]">Course</td>
-
+            <td className="py-2 font-bold text-[#6d8297]">Status</td>
             <td className="py-2 font-bold text-[#6d8297]">Date Submitted</td>
             <td className="py-2 pl-2 rounded-r-xl"></td>
           </tr>
         </thead>
         <tbody>
-          {data?.map((item, index) => {
-            const isLast = index === data.length - 1;
+          {data
+            ?.filter((item) => {
+              if (status === "All") return true;
+              if (status === item.status) return true;
+              return false;
+            })
+            ?.map((item, index) => {
+              const isLast = index === data.length - 1;
+              const approved = item.status === "APPROVED";
+              const pending = item.status === "PENDING";
+              const rejected = item.status === "REJECTED";
 
-            return (
-              <tr
-                onClick={() => setSelected(item)}
-                key={item.id}
-                className={`cursor-pointer hover:border-[transparent] hover:bg-[#f4f7fa] border-0 ${
-                  isLast ? "border-0" : "border-b"
-                }`}
-              >
-                <td className="py-2 pl-2 rounded-l-xl">
-                  {item.first_name} {item.middle_name} {item.last_name}
-                </td>
-                <td className="py-2">{courseTable[item.course_id]?.title}</td>
-                <td className="py-2">
-                  {moment(item.created_at).format("MMMM DD, YYYY hh:mm A")}
-                </td>
-                <td className="py-2 pl-2 rounded-r-xl " />
-              </tr>
-            );
-          })}
+              return (
+                <tr
+                  onClick={() => setSelected(item)}
+                  key={item.id}
+                  className={`cursor-pointer hover:border-[transparent] hover:bg-[#f4f7fa] border-0 ${
+                    isLast ? "border-0" : "border-b"
+                  }`}
+                >
+                  <td className="py-2 pl-2 rounded-l-xl">
+                    {item.first_name} {item.middle_name} {item.last_name}
+                  </td>
+                  <td className="py-2">{courseTable[item.course_id]?.title}</td>
+                  <td className="py-2 capitalize">
+                    {approved && (
+                      <span className="bg-green-200 px-2 py-1 rounded-full text-xs">
+                        <span className="text-green-700 font-semibold">
+                          {item.status.toLowerCase()}
+                        </span>
+                      </span>
+                    )}
+                    {pending && (
+                      <span className="bg-orange-200 px-2 py-1 rounded-full text-xs">
+                        <span className="text-orange-700 font-semibold">
+                          {item.status.toLowerCase()}
+                        </span>
+                      </span>
+                    )}
+                    {rejected && (
+                      <span className="bg-red-200 px-2 py-1 rounded-full text-xs">
+                        <span className="text-red-700 font-semibold">
+                          Declined
+                        </span>
+                      </span>
+                    )}
+                  </td>
+                  <td className="py-2">
+                    {moment(item.created_at).format("MMMM DD, YYYY hh:mm A")}
+                  </td>
+                  <td className="py-2 pl-2 rounded-r-xl " />
+                </tr>
+              );
+            })}
         </tbody>
       </table>
       {selected && (
@@ -306,118 +373,124 @@ function Admission() {
               <div>Role</div>
               <div>{selected.role || "N/A"}</div>
             </div>
-            <div className="mt-4 flex items-center gap-2">
-              <label className="text-xs text-gray-500 font-medium">
-                Learner ID:
-              </label>
-              <input
-                disabled={isUpdating}
-                id="studentId"
-                className="grow text-xs py-2 outline-0"
-                placeholder="Enter Student ID (Leave blank if none)"
-              />
-            </div>
-            <div className="mt-4 flex items-center gap-2">
-              <label className="text-xs text-gray-500 font-medium">
-                Admit to batch
-              </label>
-              <select
-                onChange={(e) => {
-                  setSelectedBatch(e.target.value);
-                }}
-                className="text-xs"
-                defaultValue={batch?.[0].id}
-              >
-                {batch?.map((batch) => (
-                  <option key={batch.id} value={batch.id}>
-                    {batch.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="mt-7 flex justify-between items-center">
-              <div className="text-sm flex gap-2">
-                <button
-                  disabled={isUpdating}
-                  onClick={handleAdmit}
-                  className="disabled:opacity-50 bg-[#6474dc] text-white px-4 py-2 rounded-lg font-medium"
-                >
-                  Admit
-                </button>
-                <button
-                  disabled={isUpdating}
-                  onClick={handleReject}
-                  className="disabled:opacity-50 bg-red-400 text-white px-4 py-2 rounded-lg font-medium"
-                >
-                  Reject
-                </button>
-              </div>
-              {isSuccess && (
-                <span className="text-xs text-green-500">Changes Applied</span>
-              )}
-              {isUpdating && (
-                <div className="text-xs text-[#6474dc] flex items-center gap-2">
-                  <span>Applying changes</span>
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 38 38"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <defs>
-                      <linearGradient
-                        x1="8.042%"
-                        y1="0%"
-                        x2="65.682%"
-                        y2="23.865%"
-                        id="a"
-                      >
-                        <stop
-                          stop-color="#6474dc"
-                          stop-opacity="0"
-                          offset="0%"
-                        />
-                        <stop
-                          stop-color="#6474dc"
-                          stop-opacity=".631"
-                          offset="63.146%"
-                        />
-                        <stop stop-color="#6474dc" offset="100%" />
-                      </linearGradient>
-                    </defs>
-                    <g fill="none" fill-rule="evenodd">
-                      <g transform="translate(1 1)">
-                        <path
-                          d="M36 18c0-9.94-8.06-18-18-18"
-                          id="Oval-2"
-                          stroke="url(#a)"
-                          stroke-width="2"
-                        >
-                          <animateTransform
-                            attributeName="transform"
-                            type="rotate"
-                            from="0 18 18"
-                            to="360 18 18"
-                            dur="0.9s"
-                            repeatCount="indefinite"
-                          />
-                        </path>
-                        <circle fill="#6474dc" cx="36" cy="18" r="1">
-                          <animateTransform
-                            attributeName="transform"
-                            type="rotate"
-                            from="0 18 18"
-                            to="360 18 18"
-                            dur="0.9s"
-                            repeatCount="indefinite"
-                          />
-                        </circle>
-                      </g>
-                    </g>
-                  </svg>
+            {selected.status === "PENDING" && (
+              <>
+                <div className="mt-4 flex items-center gap-2">
+                  <label className="text-xs text-gray-500 font-medium">
+                    Learner ID:
+                  </label>
+                  <input
+                    disabled={isUpdating}
+                    id="studentId"
+                    className="grow text-xs py-2 outline-0"
+                    placeholder="Enter Student ID (Leave blank if none)"
+                  />
                 </div>
-              )}
-            </div>
+                <div className="mt-4 flex items-center gap-2">
+                  <label className="text-xs text-gray-500 font-medium">
+                    Admit to batch
+                  </label>
+                  <select
+                    onChange={(e) => {
+                      setSelectedBatch(e.target.value);
+                    }}
+                    className="text-xs"
+                    defaultValue={batch?.[0].id}
+                  >
+                    {batch?.map((batch) => (
+                      <option key={batch.id} value={batch.id}>
+                        {batch.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="mt-7 flex justify-between items-center">
+                  <div className="text-sm flex gap-2">
+                    <button
+                      disabled={isUpdating}
+                      onClick={handleAdmit}
+                      className="disabled:opacity-50 bg-[#6474dc] text-white px-4 py-2 rounded-lg font-medium"
+                    >
+                      Admit
+                    </button>
+                    <button
+                      disabled={isUpdating}
+                      onClick={handleReject}
+                      className="disabled:opacity-50 bg-red-400 text-white px-4 py-2 rounded-lg font-medium"
+                    >
+                      Reject
+                    </button>
+                  </div>
+                  {isSuccess && (
+                    <span className="text-xs text-green-500">
+                      Changes Applied
+                    </span>
+                  )}
+                  {isUpdating && (
+                    <div className="text-xs text-[#6474dc] flex items-center gap-2">
+                      <span>Applying changes</span>
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 38 38"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <defs>
+                          <linearGradient
+                            x1="8.042%"
+                            y1="0%"
+                            x2="65.682%"
+                            y2="23.865%"
+                            id="a"
+                          >
+                            <stop
+                              stop-color="#6474dc"
+                              stop-opacity="0"
+                              offset="0%"
+                            />
+                            <stop
+                              stop-color="#6474dc"
+                              stop-opacity=".631"
+                              offset="63.146%"
+                            />
+                            <stop stop-color="#6474dc" offset="100%" />
+                          </linearGradient>
+                        </defs>
+                        <g fill="none" fill-rule="evenodd">
+                          <g transform="translate(1 1)">
+                            <path
+                              d="M36 18c0-9.94-8.06-18-18-18"
+                              id="Oval-2"
+                              stroke="url(#a)"
+                              stroke-width="2"
+                            >
+                              <animateTransform
+                                attributeName="transform"
+                                type="rotate"
+                                from="0 18 18"
+                                to="360 18 18"
+                                dur="0.9s"
+                                repeatCount="indefinite"
+                              />
+                            </path>
+                            <circle fill="#6474dc" cx="36" cy="18" r="1">
+                              <animateTransform
+                                attributeName="transform"
+                                type="rotate"
+                                from="0 18 18"
+                                to="360 18 18"
+                                dur="0.9s"
+                                repeatCount="indefinite"
+                              />
+                            </circle>
+                          </g>
+                        </g>
+                      </svg>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
