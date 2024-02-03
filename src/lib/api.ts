@@ -201,7 +201,7 @@ export type ApplicationType = {
   ojt: string;
   reference: string;
   role: string;
-  status: "PENDING" | "APPROVED" | "REJECTED";
+  status: "PENDING" | "APPROVED" | "REJECTED" | "ENROLLED";
   want_to_be_admin_or_teacher: boolean;
   with_cellgroup: boolean;
 };
@@ -221,7 +221,9 @@ export const getApplicationList = async (payload: ApplicationTypeRequest) => {
     .lte("created_at", endDateString)
     .gte("created_at", startDateString)
     .order("created_at", { ascending: false })
-    .or("status.eq.PENDING,status.eq.APPROVED,status.eq.REJECTED");
+    .or(
+      "status.eq.PENDING,status.eq.APPROVED,status.eq.REJECTED,status.eq.ENROLLED"
+    );
 
   if (error) return Promise.reject(error);
   return data as ApplicationType[];
@@ -355,7 +357,7 @@ export const enrollStudent = async (registration_id: string) => {
     registration_id,
   });
 
-  // send sms
+  // todo: send sms
 
   return data;
 };

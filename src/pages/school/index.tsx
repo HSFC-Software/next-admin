@@ -292,6 +292,7 @@ function Admission() {
               const approved = item.status === "APPROVED";
               const pending = item.status === "PENDING";
               const rejected = item.status === "REJECTED";
+              const enrolled = item.status === "ENROLLED";
 
               return (
                 <tr
@@ -324,6 +325,13 @@ function Admission() {
                       <span className="bg-red-200 px-2 py-1 rounded-full text-xs">
                         <span className="text-red-700 font-semibold">
                           Declined
+                        </span>
+                      </span>
+                    )}
+                    {enrolled && (
+                      <span className="bg-blue-200 px-2 py-1 rounded-full text-xs">
+                        <span className="text-blue-700 font-semibold">
+                          Enrolled
                         </span>
                       </span>
                     )}
