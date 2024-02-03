@@ -121,13 +121,16 @@ export default function School() {
               </select>
             </div>
           </div>
-          <div>
+          <div className="flex gap-4 items-center">
             <button
-            onClick={() => setShowEnrollment(true)}
-            className="text-sm bg-[#6474dc] text-white px-5 rounded-lg py-1"
-          >
-            Enroll
-          </button>
+              onClick={() => setShowEnrollment(true)}
+              className="text-sm bg-[#6474dc] text-white px-5 rounded-lg py-1"
+            >
+              Enroll
+            </button>
+            {showEnrollment && (
+              <Enrollment onClose={() => setShowEnrollment(false)} />
+            )}
             Total: <strong>{Php.format(total)}</strong>
           </div>
         </div>
