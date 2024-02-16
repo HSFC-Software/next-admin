@@ -17,7 +17,7 @@ function Sms() {
   const [mobileNumbers, setMobileNumber] = useState<string[]>([]);
   const [showInput, setShowInput] = useState(false);
   const { isLoading, mutate } = useSendBulkSms();
-  const [sender, setSender] = useState("");
+  const [sender, setSender] = useState("HSFCTaytay");
   const [showSenderPicker, setShowSenderPicker] = useState(false);
 
   const handleSubmit = () => {
